@@ -1,0 +1,68 @@
+body {
+    font-family: sans-serif; /* Выберите подходящий шрифт */
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f5; /* Светло-серый фон */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.container {
+    display: flex;
+    gap: 20px; /* Расстояние между блоками */
+}
+
+.schedule {
+    background-color: #800020; /* Темно-бордовый */
+    color: white;
+    padding: 20px;
+    border-radius: 5px;
+    width: 300px;
+    text-align: center; /* Центрируем текст */
+}
+
+.schedule h1 {
+    margin-bottom: 10px;
+}
+
+.login {
+    background-color: #333; /* Темно-серый */
+    color: white;
+    padding: 20px;
+    border-radius: 5px;
+    width: 300px;
+}
+
+.login h2 {
+    margin-bottom: 10px;
+}
+
+.login input[type="text"],
+.login input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+
+.login button {
+    background-color: #800020; /* Темно-бордовый */
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+}
+
+.login a {
+    color: white;
+    text-decoration: underline;
+}
+
+
