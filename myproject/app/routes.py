@@ -27,7 +27,7 @@ def login():
                 flash(f"Добро пожаловать в Расписание, {user[1]}!", "success")
                 return redirect(url_for("base"))
             else:
-                error = "Invalid login or password"
+                error = "Ошибка ввода логина или пароля"
 
     return render_template("main.html", error=error)
 
@@ -53,6 +53,7 @@ def connect_to_db():
 
 @app.route("/registration", methods=["GET", "POST"])
 def registration():
+    error = None
     if request.method == "POST":
         login = request.form.get("login")
         password = request.form.get("password")
@@ -71,7 +72,7 @@ def registration():
                 return redirect(url_for("login"))
             except psycopg.IntegrityError as e:
                 conn.rollback()
-                flash("Пользователь с таким логином уже существует.", "error")
+                error = "Пользователь с таким логином уже существует."
             except psycopg.Error as e:
                 conn.rollback()
                 flash(f"Ошибка базы данных: {e}", "error")
@@ -79,7 +80,7 @@ def registration():
                 cur.close()
                 conn.close()
 
-    return render_template("registration.html")
+    return render_template("registration.html", error=error)
 
 @app.route("/base")
 def base():
