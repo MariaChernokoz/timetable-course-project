@@ -40,7 +40,7 @@ def login():
                 user_object = User(user_login,password)
                 login_user(user_object)
                 print(user_login)
-                flash(f"Добро пожаловать в Расписание, {current_user.user_login}!", "success")
+                #flash(f"Добро пожаловать в Расписание, {current_user.user_login}!", "success")
                 return redirect(url_for("base"))
             else:
                 error = "Ошибка ввода логина или пароля"
@@ -50,7 +50,7 @@ def login():
 @app.route('/logout', methods=['GET'])
 def logout():
     logout_user()
-    flash("Вы успешно вышли из системы!", "success")
+    #flash("Вы успешно вышли из системы!", "success")
     return redirect(url_for('login'))
 
 @app.route("/registration", methods=["GET", "POST"])
@@ -70,7 +70,7 @@ def registration():
             try:
                 cur.execute("INSERT INTO users (user_login, password) VALUES (%s, %s)", (login, password))
                 conn.commit()
-                flash("Регистрация прошла успешно!", "success")
+                #flash("Регистрация прошла успешно!", "success")
                 return redirect(url_for("login"))
             except psycopg.IntegrityError as e:
                 conn.rollback()
@@ -87,3 +87,22 @@ def registration():
 @app.route("/base")
 def base():
     return render_template("base.html")
+
+
+from flask import render_template
+
+@app.route('/my-events')
+def my_events():
+    return render_template('base.html', active_page = 'my_events')
+
+@app.route('/friends')
+def friends():
+   return render_template('base.html', active_page = 'friends')
+
+@app.route('/todos')
+def todos():
+   return render_template('base.html', active_page = 'todos')
+
+@app.route('/shared-events')
+def shared_events():
+   return render_template('base.html', active_page = 'shared_events')
