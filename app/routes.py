@@ -88,21 +88,18 @@ def registration():
 def base():
     return render_template("base.html")
 
-
-from flask import render_template
-
 @app.route('/my-events')
 def my_events():
-    return render_template('base.html', active_page = 'my_events')
+    return render_template('my-events.html', active_page = 'my_events')
 
 @app.route('/friends')
 def friends():
-   return render_template('base.html', active_page = 'friends')
+   return render_template('friends.html', active_page = 'friends')
 
 @app.route('/todos')
 def todos():
-   return render_template('base.html', active_page = 'todos')
+   return render_template('todos.html', active_page = 'todos')
 
 @app.route('/shared-events')
 def shared_events():
-   return render_template('base.html', active_page = 'shared_events')
+   return render_template('shared-events.html', active_page = 'shared_events')
