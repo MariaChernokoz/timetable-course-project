@@ -1,12 +1,12 @@
-from app import app
-from flask import Flask, request, render_template, redirect, url_for, flash, blueprints
 import psycopg
+from flask import request, render_template, redirect, url_for, flash
+from werkzeug.security import generate_password_hash, check_password_hash
+from app import app
+from werkzeug.security import generate_password_hash, check_password_hash
 
-from passlib.hash import bcrypt
+from flask_login import login_user, current_user
 
-'''@app.route('/')
-def login():
-    return render_template('main.html')'''
+from app.user import User
 
 @app.route("/", methods=["GET", "POST"])
 def login():
@@ -18,19 +18,18 @@ def login():
         conn = connect_to_db()
         if conn:
             cur = conn.cursor()
-            cur.execute("SELECT * FROM users WHERE user_login = %s AND password = %s", (login, password))
+            cur.execute("SELECT * FROM users WHERE user_login = %s", (login,))
             user = cur.fetchone()
             cur.close()
             conn.close()
 
-            if user:
-                flash(f"Добро пожаловать в Расписание, {user[1]}!", "success")
+            if user and check_password_hash(user[1], password):
+                flash(f"Добро пожаловать в Расписание, {user[0]}!", "success")
                 return redirect(url_for("base"))
             else:
                 error = "Ошибка ввода логина или пароля"
 
     return render_template("main.html", error=error)
-
 
 #@app.route('/testdb')
 def connect_to_db():
@@ -56,7 +55,7 @@ def registration():
     error = None
     if request.method == "POST":
         login = request.form.get("login")
-        password = request.form.get("password")
+        password = generate_password_hash(request.form["password"])
 
         if not login or not password:
             flash("Пожалуйста, заполните все поля.", "error")
@@ -85,4 +84,3 @@ def registration():
 @app.route("/base")
 def base():
     return render_template("base.html")
-

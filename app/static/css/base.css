@@ -1,0 +1,85 @@
+body {
+  font-family: sans-serif;
+  background-color: #d9d1e9; /* Light purple background */
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.header {
+  background-color: #a293c1; /* Darker purple header */
+  color: white;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between; /* Расположили логотип и информацию о пользователе по краям */
+  align-items: center;
+}
+
+.site-title {
+  font-weight: bold;
+}
+
+.logo {
+  font-weight: bold;
+}
+
+.header-right {
+  display: flex;
+  align-items: center; /* Выравнивание по вертикали */
+}
+
+.user-info {
+  margin-right: 20px; /* Расстояние между информацией о пользователе и логотипом */
+  display: flex;
+  align-items: center;
+}
+
+
+.user-info span {
+  margin-right: 10px;
+}
+
+.user-info a {
+  color: white;
+  text-decoration: none;
+}
+
+.user-info a:hover {
+  text-decoration: underline;
+}
+
+.container {
+  width: 600px; /* Увеличили ширину для отображения очередей */
+  margin: 50px auto;
+  background-color: white;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.container h1 {
+  margin-bottom: 20px;
+}
+
+.queue-container {
+  /*  Стиль для контейнера очередей.  Можно добавить таблицу или список здесь */
+  border: 1px solid #ccc;
+  padding: 10px;
+  min-height: 200px; /* Минимальная высота для отображения чего-нибудь */
+}
+
+
+
+
+
+a {
+  color: #a293c1;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}

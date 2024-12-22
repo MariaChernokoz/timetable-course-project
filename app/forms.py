@@ -1,14 +1,16 @@
 from flask_wtf import FlaskForm
-from wtforms import BooleanField, StringField, DateField, IntegerField, PasswordField, SubmitField, validators
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, validators
+from wtforms.validators import Length, EqualTo
+
 
 class RegistrationForm(FlaskForm):
-    username = StringField('Имя пользователя', [validators.Length(min=4, max=25)])
-    email = StringField('E-mail', [validators.Length(min=6, max=100), validators.Email()])
-    password = PasswordField('Пароль', [validators.InputRequired(),
-                                        validators.Length(min=6, max=100),
-                                        validators.EqualTo('confirm', message='Пароли должны совпадать')])
-    confirm  = PasswordField('Повторите пароль')
-    birth_date = DateField('Дата рождения', format='%Y-%m-%d', validators=[validators.InputRequired()])
-    region_code = IntegerField('Код региона', [validators.InputRequired()])
-    want_spam = BooleanField('Я согласен получать рекламную рассылку', [validators.InputRequired()])
+    username = StringField('Имя пользователя', [validators.InputRequired(), validators.Length(min=4, max=25)])
+    password = PasswordField('Пароль', [validators.InputRequired(), validators.Length(min=6, max=100)])
     submit = SubmitField('Зарегистрироваться')
+
+
+class LoginForm(FlaskForm):
+    username = StringField('Логин',   [validators.InputRequired(), Length(min=4, max=25)])
+    password = PasswordField('Пароль', [validators.InputRequired()])
+    remember = BooleanField('Запомнить меня')
+    submit = SubmitField('Войти')
