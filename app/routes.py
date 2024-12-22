@@ -39,7 +39,6 @@ def login():
             if user and check_password_hash(user[1], password):
                 user_object = User(user_login,password)
                 login_user(user_object)
-                print(user_login)
                 #flash(f"Добро пожаловать в Расписание, {current_user.user_login}!", "success")
                 return redirect(url_for("base"))
             else:
@@ -92,9 +91,11 @@ def base():
 def my_events():
     return render_template('my-events.html', active_page = 'my_events')
 
+'''
 @app.route('/friends')
 def friends():
    return render_template('friends.html', active_page = 'friends')
+'''
 
 @app.route('/todos')
 def todos():
@@ -103,3 +104,54 @@ def todos():
 @app.route('/shared-events')
 def shared_events():
    return render_template('shared-events.html', active_page = 'shared_events')
+
+
+@app.route('/add_friend/<friend_login>', methods=['POST'])
+def add_friend(friend_login):
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+
+    conn = connect_to_db()
+    if conn:
+        cur = conn.cursor()
+
+        # Проверяем, существует ли пользователь с логином friend_login
+        cur.execute("SELECT COUNT(*) FROM users WHERE user_login = %s", (friend_login,))
+        user_exists = cur.fetchone()[0] > 0
+
+        if not user_exists:
+            flash(f"Пользователь {friend_login} не найден.", "danger")
+            cur.close()
+            conn.close()
+            return redirect(url_for('friends'))
+
+        # Добавляем запись о дружбе в таблицу friendships
+        cur.execute("INSERT INTO friendships (senders_login, recipient_login) VALUES (%s, %s)",
+                    (current_user.user_login, friend_login))
+        conn.commit()
+        cur.close()
+        conn.close()
+        flash(f"Вы добавили {friend_login} в друзья!", "success")
+    else:
+        flash("Ошибка подключения к базе данных", "danger")
+
+    return redirect(url_for('friends'))
+
+
+# Отображение списка друзей
+@app.route('/friends')
+def friends():
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+
+    conn = connect_to_db()
+    friends_list = []
+    if conn:
+        cur = conn.cursor()
+        # Получаем список друзей текущего пользователя
+        cur.execute("SELECT recipient_login FROM friendships WHERE senders_login = %s", (current_user.user_login,))
+        friends_list = cur.fetchall()
+        cur.close()
+        conn.close()
+
+    return render_template('friends.html', active_page='friends', friends=friends_list)

@@ -1,7 +1,18 @@
 {% extends "base.html" %}
 
-{% block title %}Приветствие{% endblock %}
+{% block title %}Список друзей{% endblock %}
 
 {% block content %}
-    <h1>Привет2</h1>
+    <h1>Ваши друзья</h1>
+    <ul>
+        {% for friend in friends %}
+            <li>{{ friend[0] }}</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Добавить друга</h2>
+    <form action="{{ url_for('add_friend', friend_login='друг_логин') }}" method="POST">
+        <input type="text" name="friend_login" placeholder="Введите логин друга" required>
+        <button type="submit">Добавить в друзья</button>
+    </form>
 {% endblock %}
