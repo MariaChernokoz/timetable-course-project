@@ -11,48 +11,60 @@
     padding: 10px;
     background-color: #f8f9fa;
 }
-.header .nav {
-    display: flex;
+
+.nav {
+    display: flex; /* Изменили: убрали flex-wrap */
     gap: 20px;
-    flex-wrap: wrap;
+    list-style-type: none; /* Убираем маркеры списка */
+    padding: 0; /* Убираем отступы у списка */
+    margin: 0; /* Убираем отступы у списка */
 }
-.header .user-info {
+
+.nav-link {
+    color: #dc3545;
+    border-radius: 5px;
+    font-size: 1rem;
+    padding: 10px 15px; /* Добавим отступы для кнопок */
+    transition: color 0.3s ease, background-color 0.3s ease; /* Плавный переход для фона */
+    text-decoration: none; /* Убирать подчеркивание */
+    font-family: sans-serif;
+}
+
+.nav-link:hover {
+    color: #800000;
+    background-color: rgba(220, 53, 69, 0.1) /* при наведении */
+}
+
+.nav-link.active {
+    background-color: #800000;
+    color: #f8f9fa;
+    border: 1px solid #800000;
+}
+
+.user-info {
     display: flex;
     align-items: center;
     gap: 10px;
+    font-family: sans-serif;
 }
+
 .logout-button {
     padding: 5px 10px;
-    background-color: #dc3545;
+    background-color: #333;
     color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
 }
+
 .logout-button a {
     color: white;
     text-decoration: none;
 }
 
-.nav-pills .nav-link {
-    color: #dc3545;
-    border-radius: 5px;
-    font-size: 1rem;
-    transition: color 0.3s ease;
-}
-
-.nav-pills .nav-link:hover {
-    color: #800000;
-}
-.nav-pills .nav-link.active {
-    background-color: transparent;
-    color: #800000;
-    border: 2px solid #800000;
-}
-
 /* Медиа-запрос для уменьшения шрифта на узких экранах */
 @media (max-width: 1000px) {
-    .nav-pills .nav-link {
+    .nav-link {
         font-size: 0.8rem;
     }
     .user-info span {

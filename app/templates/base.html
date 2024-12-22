@@ -4,26 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Расписание</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
 </head>
 <body>
     <div class="container">
         <div class="header">
             <ul class="nav nav-pills">
-                 <li class="nav-item"><a href="{{ url_for('my_events') }}" class="nav-link {% if active_page == 'my_events' %} active {% endif %}">Мои события</a></li>
+                <li class="nav-item"><a href="{{ url_for('my_events') }}" class="nav-link {% if active_page == 'my_events' %} active {% endif %}">Мои события</a></li>
                 <li class="nav-item"><a href="{{ url_for('friends') }}" class="nav-link {% if active_page == 'friends' %} active {% endif %}">Друзья</a></li>
                 <li class="nav-item"><a href="{{ url_for('todos') }}" class="nav-link {% if active_page == 'todos' %} active {% endif %}">Список дел</a></li>
-                 <li class="nav-item"><a href="{{ url_for('shared_events') }}" class="nav-link {% if active_page == 'shared_events' %} active {% endif %}">Совместные события</a></li>
+                <li class="nav-item"><a href="{{ url_for('shared_events') }}" class="nav-link {% if active_page == 'shared_events' %} active {% endif %}">Совместные события</a></li>
             </ul>
             {% if current_user.is_authenticated %}
                 <div class="user-info">
                     <span>{{ current_user.user_login }}</span>
-                     <button class="logout-button"><a href="{{ url_for('logout') }}">Выход</a></button>
+                    <button class="logout-button"><a href="{{ url_for('logout') }}">Выход</a></button>
                 </div>
             {% endif %}
         </div>
-      </div>
-<h1>Добро пожаловать в Расписание!</h1>
+    </div>
+    <h1>Добро пожаловать в Расписание!</h1>
 </body>
 </html>
