@@ -1,7 +1,33 @@
 {% extends "base.html" %}
 
-{% block title %}Приветствие{% endblock %}
+{% block title %}Мои события{% endblock %}
 
 {% block content %}
-    <h1>Привет1!!!!!!!</h1>
+    <h1>Мои события</h1>
+
+    {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+        <ul>
+        {% for category, message in messages %}
+            <li class="{{ category }}">{{ message }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+    {% endwith %}
+
+    <a href="{{ url_for('create_event') }}">Создать новое событие</a>
+
+    {% if events_by_date %}
+        {% for date, events in events_by_date.items() %}
+            <h2>{{ date.strftime('%Y-%m-%d') }}</h2>
+            <ul>
+                {% for event_name, start_time, end_time, event_location in events %}
+                     <li>{{ event_name }} ({{ start_time }}-{{end_time}}), {{event_location}}</li>
+                {% endfor %}
+            </ul>
+        {% endfor %}
+    {% else %}
+        <p>Нет событий.</p>
+    {% endif %}
+
 {% endblock %}

@@ -4,6 +4,7 @@ from app import app
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, current_user, logout_user
 from app.user import User
+from datetime import datetime
 
 
 
@@ -87,9 +88,80 @@ def registration():
 def base():
     return render_template("base.html")
 
+
+@app.route('/create-event', methods=["GET", "POST"])
+def create_event():
+   # (Оставляем код создания события без изменений)
+    if request.method == "POST":
+        event_name = request.form.get("event_name")
+        start_time = request.form.get("start_time")
+        end_time = request.form.get("end_time")
+        location = request.form.get("location")
+        category = request.form.get("category")  # Будет получать значение из выпадающего списка
+        comment = request.form.get("comment")
+
+        user_login = current_user.user_login
+
+        if not event_name or not start_time or not end_time:
+            flash("Пожалуйста, заполните все обязательные поля.", "error")
+            return redirect(url_for("create_event"))
+
+        try:
+            start_time = datetime.strptime(start_time, "%Y-%m-%dT%H:%M")
+            end_time = datetime.strptime(end_time, "%Y-%m-%dT%H:%M")
+        except ValueError:
+            flash("Некорректный формат даты и времени.", "error")
+            return redirect(url_for("create_event"))
+
+        conn = connect_to_db()
+        try:
+            cur = conn.cursor()
+            cur.execute(
+                """
+                INSERT INTO Events (User_login, Event_name, Start_time_and_date, End_time_and_date, Location, Category, Comment)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """,
+                (user_login, event_name, start_time, end_time, location, category, comment)
+            )
+            conn.commit()
+            flash("Событие успешно создано!", "success")
+            return redirect(url_for("my_events"))
+        except psycopg.Error as e:
+            conn.rollback()
+            flash(f"Ошибка базы данных при создании события: {e}", "error")
+        finally:
+            cur.close()
+            conn.close()
+
+    return render_template('create-event.html')
+
+
 @app.route('/my-events')
 def my_events():
-    return render_template('my-events.html', active_page = 'my_events')
+    conn = connect_to_db()
+    events_by_date = {} # Используем словарь, где ключ - дата, а значение - список событий
+    cur = None
+    try:
+        cur = conn.cursor()
+        # Получите события для текущего пользователя
+        cur.execute("SELECT * FROM Events WHERE User_login = %s ORDER BY Start_time_and_date",
+                    (current_user.user_login,))
+        fetched_events = cur.fetchall()
+
+        for event in fetched_events:
+            event_date = event[3].date()  # Получаем только дату из start_time
+            if event_date not in events_by_date:
+                events_by_date[event_date] = []  # Если нет ключа, создаем список
+            events_by_date[event_date].append(
+                (event[2], event[3].strftime('%H:%M'), event[4].strftime('%H:%M'), event[5]))
+    except psycopg.Error as e:
+        flash(f"Ошибка базы данных: {e}", "error")
+    finally:
+        if cur:
+            cur.close()
+        conn.close()
+
+    return render_template('my-events.html', active_page='my_events', events_by_date=events_by_date)
 
 '''
 @app.route('/friends')
