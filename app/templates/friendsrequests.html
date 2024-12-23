@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Заявки в друзья{% endblock %}
+
+{% block content %}
+    <h1>Заявки в друзья</h1>
+    <ul>
+        {% for request in friend_requests %}
+            <li>
+                {{ request.senders_login }}
+                <form action="{{ url_for('accept_friend_request', request_id=request.request_id) }}" method="POST" style="display:inline;">
+                    <button type="submit">Принять</button>
+                </form>
+                <form action="{{ url_for('decline_friend_request', request_id=request.request_id) }}" method="POST" style="display:inline;">
+                    <button type="submit">Отклонить</button>
+                </form>
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock %}
