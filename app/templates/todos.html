@@ -1,7 +1,117 @@
 {% extends "base.html" %}
 
-{% block title %}Приветствие{% endblock %}
+{% block title %}Список дел{% endblock %}
 
 {% block content %}
-    <h1>Список дел</h1>
+    <div class="task-list-container">
+        <h1>Список дел</h1>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/todos.css') }}">
+        <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+        <ul class="task-list">
+            {% for task in tasks %}
+            <li class="task-item">
+                <form action="{{ url_for('delete_task', task_name=task[0]) }}" method="POST" class="task-form">
+                    <button type="submit" class="task-button" onclick="return confirm('Вы уверены, что хотите удалить эту задачу?');">Выполнено</button>
+                </form>
+                <div class="task-info">
+                    <strong class="task-name">{{ task[0] }}</strong>
+                    <span class="task-deadline">
+                        {% if task[1] %}
+                            Срок: {{ task[1] }}{% if task[2] %} в {{ task[2] }}{% endif %}
+                        {% endif %}
+                    </span>
+                </div>
+            </li>
+            {% else %}
+            <li class="task-empty">Задачи отсутствуют.</li>
+            {% endfor %}
+        </ul>
+        <button id="addTaskBtn" class="add-task-button">Добавить новое</button>
+    </div>
+
+    <!-- Модальное окно для создания задачи -->
+    <div id="taskModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <form method="POST" class="modal-form">
+                <label for="task_name" class="modal-label">Название задачи:</label>
+                <input type="text" id="task_name" name="task_name" class="modal-input" required>
+
+                <label for="deadline" class="modal-label">Срок выполнения:</label>
+                <input type="text" id="deadline" name="deadline" class="modal-input">
+
+                <label for="time" class="modal-label">Время выполнения:</label>
+                <input type="time" id="time" name="time" class="modal-input">
+
+                <div class="modal-buttons">
+                    <button type="submit" class="modal-submit">Добавить задачу</button>
+                    <button type="button" id="closeModal" class="modal-close">Закрыть</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul class="messages-list">
+                {% for category, message in messages %}
+                    <li class="message {{ category }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#addTaskBtn').click(function() {
+                const button = $(this);
+                const modal = $('#taskModal');
+
+                modal.css({
+                    'display': 'flex',
+                    'position': 'absolute',
+                    'top': button.offset().top + button.outerHeight(),
+                    'left': button.offset().left + (button.outerWidth() / 2) - modal.outerWidth()/2,
+                    'transform': 'translateY(10px)'
+                });
+            });
+
+            $('#closeModal').click(function() {
+                $('#taskModal').hide();
+            });
+
+            // Инициализация datepicker с запретом выбора прошедших дат
+            $("#deadline").datepicker({
+                dateFormat: "yy-mm-dd",
+                minDate: 0 // Запрет на выбор прошедших дат
+            });
+        });
+    </script>
+
+    <style>
+        /* Стили для выделенной даты */
+        .ui-datepicker .ui-state-active {
+            background-color: #b87070 !important; /* Цвет фона выделенной даты */
+            color: white !important; /* Цвет текста выделенной даты */
+        }
+
+        .ui-datepicker .ui-state-hover {
+            background-color: #e5b8b8; /* Цвет фона при наведении */
+        }
+
+        .ui-datepicker .ui-datepicker-today {
+            background-color: #b87070 !important; /* Цвет фона текущего дня */
+            color: white !important; /* Цвет текста текущего дня */
+        }
+
+        .modal {
+            /* ваши стили для модальных окон */
+        }
+
+        .modal-content {
+            /* ваши стили для содержания модального окна */
+        }
+    </style>
+
 {% endblock %}

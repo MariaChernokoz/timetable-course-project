@@ -97,9 +97,75 @@ def friends():
    return render_template('friends.html', active_page = 'friends')
 '''
 
-@app.route('/todos')
+
+@app.route('/todos', methods=['GET', 'POST'])
 def todos():
-   return render_template('todos.html', active_page = 'todos')
+    if request.method == 'POST':
+        task_name = request.form.get('task_name')
+        deadline = request.form.get('deadline')  # Дата может быть пустой
+        user_login = current_user.user_login
+
+        if not task_name:
+            flash("Пожалуйста, введите название задачи.", "error")
+            return redirect(url_for('todos'))
+
+        conn = connect_to_db()
+        if conn:
+            cur = conn.cursor()
+            try:
+                # Если deadline не указан, используем None
+                if not deadline:
+                    deadline = None
+
+                cur.execute(
+                    "INSERT INTO Tasks (User_login, Task_name, Creation_date, Deadline, Task_status) VALUES (%s, %s, NOW(), %s, %s)",
+                    (user_login, task_name, deadline, 'Новая')
+                )
+                conn.commit()
+                #flash("Задача успешно добавлена!", "success")
+                return redirect(url_for('todos'))
+            except psycopg.Error as e:
+                conn.rollback()
+                flash(f"Ошибка базы данных: {e}", "error")
+            finally:
+                cur.close()
+                conn.close()
+
+    # Получаем список задач текущего пользователя
+    tasks = []
+    conn = connect_to_db()
+    if conn:
+        cur = conn.cursor()
+        cur.execute("SELECT Task_name, Deadline FROM Tasks WHERE User_login = %s", (current_user.user_login,))
+        fetched_tasks = cur.fetchall()
+
+        # Форматируем дату и время перед передачей в шаблон
+        tasks = [(task[0], task[1].strftime('%Y-%m-%d %H:%M') if task[1] else '') for task in fetched_tasks]
+
+        cur.close()
+        conn.close()
+
+    return render_template('todos.html', active_page='todos', tasks=tasks)
+
+
+@app.route('/todos/delete/<task_name>', methods=['POST'])
+def delete_task(task_name):
+    conn = connect_to_db()
+    if conn:
+        cur = conn.cursor()
+        try:
+            cur.execute("DELETE FROM Tasks WHERE User_login = %s AND Task_name = %s",
+                        (current_user.user_login, task_name))
+            conn.commit()
+            flash("Задача успешно удалена!", "success")
+        except psycopg.Error as e:
+            conn.rollback()
+            flash(f"Ошибка базы данных: {e}", "error")
+        finally:
+            cur.close()
+            conn.close()
+    return redirect(url_for('todos'))
+
 
 @app.route('/shared-events')
 def shared_events():
