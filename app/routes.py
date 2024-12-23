@@ -91,12 +91,6 @@ def base():
 def my_events():
     return render_template('my-events.html', active_page = 'my_events')
 
-'''
-@app.route('/friends')
-def friends():
-   return render_template('friends.html', active_page = 'friends')
-'''
-
 
 @app.route('/todos', methods=['GET', 'POST'])
 def todos():
@@ -171,7 +165,6 @@ def delete_task(task_name):
 def shared_events():
    return render_template('shared-events.html', active_page = 'shared_events')
 
-
 @app.route('/friendsrequests')
 def friendsrequests():
     if not current_user.is_authenticated:
@@ -228,7 +221,7 @@ def accept_friend_request(request_id):
 
             flash(f"Вы приняли заявку от {sender_login} в друзья!", "success")
         else:
-            flash("Заявка не найдена.", "danger")
+            flash("Заявка не найдена.", "error")
 
         cur.close()
         conn.close()
@@ -274,7 +267,7 @@ def add_friend(friend_login):
         user_exists = cur.fetchone()[0] > 0
 
         if not user_exists:
-            flash(f"Пользователь {friend_login} не найден.", "danger")
+            flash(f"Пользователь {friend_login} не найден.", "error")
             cur.close()
             conn.close()
             return redirect(url_for('friends'))
@@ -291,6 +284,33 @@ def add_friend(friend_login):
 
     return redirect(url_for('friends'))
 
+
+@app.route('/remove_friend/<friend_login>', methods=['POST'])
+def remove_friend(friend_login):
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+
+    conn = connect_to_db()
+    if conn:
+        cur = conn.cursor()
+
+        # Удаляем запись о дружбе из таблицы friendships
+        cur.execute("DELETE FROM friendships WHERE senders_login = %s AND recipient_login = %s",
+                    (current_user.user_login, friend_login))
+        conn.commit()
+
+        # Проверяем, если запись была удалена
+        if cur.rowcount > 0:
+            flash(f"Вы удалили {friend_login} из друзей!", "success")
+        else:
+            flash(f"Не удалось удалить {friend_login} из друзей.", "error")
+
+        cur.close()
+        conn.close()
+    else:
+        flash("Ошибка подключения к базе данных", "danger")
+
+    return redirect(url_for('friends'))
 
 # Отображение списка друзей
 @app.route('/friends')
@@ -318,6 +338,7 @@ def search_friend():
     friend_login = request.form['friend_login']
     conn = connect_to_db()
     search_result = None
+    error = None
     friends_list = []  # Инициализируйте список друзей
 
     if conn:
@@ -344,13 +365,12 @@ def search_friend():
                 'is_friend': is_friend
             }
         else:
-            flash(f"Пользователь {friend_login} не найден.", "danger")
+            flash(f"Пользователь {friend_login} не найден.", "error")
 
         cur.close()
         conn.close()
 
     return render_template('friends.html', active_page='friends', friends=friends_list, search_result=search_result)
-
 
 @app.route('/send_friend_request/<recipient_login>', methods=['POST'])
 def send_friend_request(recipient_login):
@@ -359,8 +379,9 @@ def send_friend_request(recipient_login):
 
     # Проверка, пытается ли пользователь отправить заявку самому себе
     if current_user.user_login == recipient_login:
+        flash("Вы не можете отправить запрос самому себе.", "error")
         error = "Вы не можете отправить запрос самому себе."
-        return render_template('friendsrequests.html', error=error, active_page='friendsrequests')
+        return render_template('friends.html', error=error, active_page='friends')
 
     conn = connect_to_db()
     if conn:

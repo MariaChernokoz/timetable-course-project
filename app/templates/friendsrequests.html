@@ -13,16 +13,29 @@
         <p class="danger">{{ error }}</p>
     {% endif %}
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+       {% if messages %}
+           <div class="flash-messages">
+               {% for category, message in messages %}
+                   <div class="alert alert-{{ category }}">
+                       {{ message }}
+                       <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+                   </div>
+               {% endfor %}
+           </div>
+       {% endif %}
+   {% endwith %}
+
     <ul class="task-list">
         {% for request in friend_requests %}
             <li class="task-item">
-                <div class="task-info">
+                <div class="tasks2-info">
                     {{ request.senders_login }}
                     <form action="{{ url_for('accept_friend_request', request_id=request.request_id) }}" method="POST" style="display:inline;">
-                        <button type="submit">Принять</button>
+                        <button class="add-button" type="submit">Принять</button>
                     </form>
                     <form action="{{ url_for('decline_friend_request', request_id=request.request_id) }}" method="POST" style="display:inline;">
-                        <button type="submit">Отклонить</button>
+                        <button class="add-button" type="submit">Отклонить</button>
                     </form>
                 </div>
             </li>

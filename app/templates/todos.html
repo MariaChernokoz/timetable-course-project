@@ -5,8 +5,8 @@
 {% block content %}
     <div class="task-list-container">
         <h1>Список дел</h1>
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/todos.css') }}">
         <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/todos.css') }}">
         <ul class="task-list">
             {% for task in tasks %}
             <li class="task-item">
@@ -88,30 +88,14 @@
             });
         });
     </script>
-
-    <style>
-        /* Стили для выделенной даты */
-        .ui-datepicker .ui-state-active {
-            background-color: #b87070 !important; /* Цвет фона выделенной даты */
-            color: white !important; /* Цвет текста выделенной даты */
-        }
-
-        .ui-datepicker .ui-state-hover {
-            background-color: #e5b8b8; /* Цвет фона при наведении */
-        }
-
-        .ui-datepicker .ui-datepicker-today {
-            background-color: #b87070 !important; /* Цвет фона текущего дня */
-            color: white !important; /* Цвет текста текущего дня */
-        }
-
-        .modal {
-            /* ваши стили для модальных окон */
-        }
-
-        .modal-content {
-            /* ваши стили для содержания модального окна */
-        }
-    </style>
+    <script>
+    // Авто-закрытие сообщения через 5 секунд
+    setTimeout(function() {
+        const flashMessages = document.querySelectorAll('.flash-messages .alert');
+        flashMessages.forEach(function(msg) {
+            msg.style.display = 'none';
+        });
+    }, 5000);
+    </script>
 
 {% endblock %}
