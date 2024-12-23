@@ -178,22 +178,29 @@ def friendsrequests():
         return redirect(url_for('login'))
 
     conn = connect_to_db()
-    friend_requests = []
+    friend_requests_received = []
+    friend_requests_sent = []
 
     if conn:
         cur = conn.cursor()
+
         # Получаем заявки в друзья, отправленные к текущему пользователю
-        cur.execute("SELECT request_id, senders_login FROM FriendRequest WHERE Recipient_login = %s AND Status_request = 'pending'",
-                    (current_user.user_login,))
-        # Преобразуем результаты в список словарей
-        friend_requests = [{'request_id': row[0], 'senders_login': row[1]} for row in cur.fetchall()]
+        cur.execute("SELECT request_id, senders_login FROM FriendRequest WHERE Recipient_login = %s AND Status_request = 'pending'", (current_user.user_login,))
+        friend_requests_received = [{'request_id': row[0], 'senders_login': row[1]} for row in cur.fetchall()]
+
+        # Получаем заявки в друзья, отправленные текущим пользователем
+        cur.execute("SELECT Recipient_login FROM FriendRequest WHERE senders_login = %s AND Status_request = 'pending'", (current_user.user_login,))
+        friend_requests_sent = [row[0] for row in cur.fetchall()]
 
         cur.close()
         conn.close()
 
-    return render_template('friendsrequests.html', active_page='friendsrequests', friend_requests=friend_requests)
+    return render_template('friendsrequests.html',
+                           active_page='friendsrequests',
+                           friend_requests=friend_requests_received,
+                           friend_requests_sent=friend_requests_sent)
 
-@app.route('/accept_friend_request/<request_id>', methods=['POST'])
+@app.route('/accept_friend_request/<int:request_id>', methods=['POST'])
 def accept_friend_request(request_id):
     if not current_user.is_authenticated:
         return redirect(url_for('login'))
@@ -210,9 +217,9 @@ def accept_friend_request(request_id):
         if sender:
             sender_login = sender[0]
 
-            # Создаем запись о дружбе
-            cur.execute("INSERT INTO Friendships (senders_login, recipient_login) VALUES (%s, %s)",
-                        (sender_login, current_user.user_login))
+            # Создаем запись о дружбе (двусторонняя дружба)
+            cur.execute("INSERT INTO Friendships (senders_login, recipient_login) VALUES (%s, %s)", (sender_login, current_user.user_login))
+            cur.execute("INSERT INTO Friendships (senders_login, recipient_login) VALUES (%s, %s)", (current_user.user_login, sender_login))
             conn.commit()
 
             # Обновляем статус заявки на 'accepted'
@@ -344,33 +351,58 @@ def search_friend():
 
     return render_template('friends.html', active_page='friends', friends=friends_list, search_result=search_result)
 
-@app.route('/send_friend_request/<friend_login>', methods=['POST'])
-def send_friend_request(friend_login):
+
+@app.route('/send_friend_request/<recipient_login>', methods=['POST'])
+def send_friend_request(recipient_login):
     if not current_user.is_authenticated:
         return redirect(url_for('login'))
+
+    # Проверка, пытается ли пользователь отправить заявку самому себе
+    if current_user.user_login == recipient_login:
+        error = "Вы не можете отправить запрос самому себе."
+        return render_template('friendsrequests.html', error=error, active_page='friendsrequests')
 
     conn = connect_to_db()
     if conn:
         cur = conn.cursor()
 
-        # Проверяем, существует ли пользователь с логином friend_login
-        cur.execute("SELECT COUNT(*) FROM users WHERE user_login = %s", (friend_login,))
-        user_exists = cur.fetchone()[0] > 0
+        # Проверка на существование входящей заявки
+        cur.execute(
+            "SELECT 1 FROM FriendRequest WHERE senders_login = %s AND Recipient_login = %s AND Status_request = 'pending'",
+            (recipient_login, current_user.user_login)
+        )
+        incoming_request_exists = cur.fetchone() is not None
 
-        if not user_exists:
-            flash(f"Пользователь {friend_login} не найден.", "danger")
-            cur.close()
-            conn.close()
-            return redirect(url_for('friends'))
+        # Проверка на существование исходящей заявки
+        cur.execute(
+            "SELECT 1 FROM FriendRequest WHERE senders_login = %s AND Recipient_login = %s AND Status_request = 'pending'",
+            (current_user.user_login, recipient_login)
+        )
+        outgoing_request_exists = cur.fetchone() is not None
 
-        # Добавляем запись о запросе в таблицу FriendRequest
-        cur.execute("INSERT INTO FriendRequest (Status_request, Senders_login, Recipient_login) VALUES (%s, %s, %s)",
-                    ('pending', current_user.user_login, friend_login))
-        conn.commit()
+        error = None
+
+        if incoming_request_exists:
+            error = "Пользователь уже отправил вам запрос на дружбу."
+        elif outgoing_request_exists:
+            error = "Вы уже отправили запрос на дружбу этому пользователю."
+        else:
+            # Если заявки не существуют, выполняем вставку
+            cur.execute(
+                "INSERT INTO FriendRequest (senders_login, Recipient_login, Status_request) "
+                "VALUES (%s, %s, 'pending') RETURNING request_id;",
+                (current_user.user_login, recipient_login)
+            )
+            conn.commit()
+            request_id = cur.fetchone()[0]
+            success_message = "Запрос на дружбу успешно отправлен."
+
+            # Возвращение к списку заявок с сообщением об успехе
+            return render_template('friends.html', success=success_message, active_page='friends')
+
+        # Если ошибка есть, возвращаем её на страницу
         cur.close()
         conn.close()
-        flash(f"Заявка в друзья отправлена пользователю {friend_login}!", "success")
-    else:
-        flash("Ошибка подключения к базе данных", "danger")
+        return render_template('friends.html', error=error, active_page='friends')
 
     return redirect(url_for('friends'))

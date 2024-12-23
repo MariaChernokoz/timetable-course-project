@@ -3,18 +3,43 @@
 {% block title %}Заявки в друзья{% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/todos.css') }}">
+<div class="task-list-container">
     <h1>Заявки в друзья</h1>
-    <ul>
+
+    {% if error %}
+        <p class="danger">{{ error }}</p>
+    {% endif %}
+
+    <ul class="task-list">
         {% for request in friend_requests %}
-            <li>
-                {{ request.senders_login }}
-                <form action="{{ url_for('accept_friend_request', request_id=request.request_id) }}" method="POST" style="display:inline;">
-                    <button type="submit">Принять</button>
-                </form>
-                <form action="{{ url_for('decline_friend_request', request_id=request.request_id) }}" method="POST" style="display:inline;">
-                    <button type="submit">Отклонить</button>
-                </form>
+            <li class="task-item">
+                <div class="task-info">
+                    {{ request.senders_login }}
+                    <form action="{{ url_for('accept_friend_request', request_id=request.request_id) }}" method="POST" style="display:inline;">
+                        <button type="submit">Принять</button>
+                    </form>
+                    <form action="{{ url_for('decline_friend_request', request_id=request.request_id) }}" method="POST" style="display:inline;">
+                        <button type="submit">Отклонить</button>
+                    </form>
+                </div>
             </li>
         {% endfor %}
+        {% if friend_requests|length == 0 %}
+            <li class="task-item task-empty">У вас нет запросов на дружбу.</li>
+        {% endif %}
     </ul>
+
+    <h2>Вы отправили запросы на дружбу:</h2>
+    <ul class="task-list">
+        {% for recipient in friend_requests_sent %}
+            <li class="task-item">
+                {{ recipient }}
+            </li>
+        {% endfor %}
+        {% if friend_requests_sent|length == 0 %}
+            <li class="task-item task-empty">Вы не отправили запросов на дружбу.</li>
+        {% endif %}
+    </ul>
+</div>
 {% endblock %}
