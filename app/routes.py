@@ -124,7 +124,6 @@ def create_event():
                 (user_login, event_name, start_time, end_time, location, category, comment)
             )
             conn.commit()
-            flash("Событие успешно создано!", "success")
             return redirect(url_for("my_events"))
         except psycopg.Error as e:
             conn.rollback()
@@ -139,21 +138,22 @@ def create_event():
 @app.route('/my-events')
 def my_events():
     conn = connect_to_db()
-    events_by_date = {} # Используем словарь, где ключ - дата, а значение - список событий
+    events_by_date = {}  # Используем словарь, где ключ - дата, а значение - список событий
     cur = None
     try:
         cur = conn.cursor()
         # Получите события для текущего пользователя
-        cur.execute("SELECT * FROM Events WHERE User_login = %s ORDER BY Start_time_and_date",
+        cur.execute("SELECT Event_name, Start_time_and_date, End_time_and_date, LOCATION, Category, COMMENT FROM Events WHERE User_login = %s ORDER BY Start_time_and_date",
                     (current_user.user_login,))
         fetched_events = cur.fetchall()
 
         for event in fetched_events:
-            event_date = event[3].date()  # Получаем только дату из start_time
+            event_date = event[1].date()  # Получаем только дату из Start_time_and_date
             if event_date not in events_by_date:
                 events_by_date[event_date] = []  # Если нет ключа, создаем список
             events_by_date[event_date].append(
-                (event[2], event[3].strftime('%H:%M'), event[4].strftime('%H:%M'), event[5]))
+                (event[0], event[1].strftime('%H:%M'), event[2].strftime('%H:%M'), event[3], event[4], event[5])  # Добавляем event[5] для комментария
+            )
     except psycopg.Error as e:
         flash(f"Ошибка базы данных: {e}", "error")
     finally:
@@ -162,6 +162,7 @@ def my_events():
         conn.close()
 
     return render_template('my-events.html', active_page='my_events', events_by_date=events_by_date)
+
 
 '''
 @app.route('/friends')

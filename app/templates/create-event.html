@@ -4,29 +4,46 @@
 
 {% block content %}
     <h1>Создать новое событие</h1>
-    <form method="POST">
-        <label for="event_name">Название события:</label>
-        <input type="text" id="event_name" name="event_name" required>
+    <div class="event-form-container" style="border: 1px solid #ccc; padding: 10px; margin: 10px auto; border-radius: 5px; width: 400px; text-align: left;">
+        <form method="POST">
+            <div>
+                <label for="event_name">Название события:</label>
+                <input type="text" id="event_name" name="event_name" required>
+            </div>
 
-        <label for="start_time">Начало:</label>
-        <input type="datetime-local" id="start_time" name="start_time" required>
+            <div>
+                <label for="start_time">Начало:</label>
+                <input type="datetime-local" id="start_time" name="start_time" required>
+            </div>
 
-        <label for="end_time">Конец:</label>
-        <input type="datetime-local" id="end_time" name="end_time" required>
+            <div>
+                <label for="end_time">Конец:</label>
+                <input type="datetime-local" id="end_time" name="end_time" required>
+            </div>
 
-        <label for="location">Место:</label>
-        <input type="text" id="location" name="location">
+            <div>
+                <label for="location">Место:</label>
+                <input type="text" id="location" name="location">
+            </div>
 
-        <label for="category">Категория:</label>
-        <select id="category" name="category" required>
-            <option value="Личное">Личное</option>
-            <option value="Работа">Работа</option>
-            <option value="Учёба">Учёба</option>
-        </select>
+            <div>
+                <label for="category">Категория:</label>
+                <select id="category" name="category" required>
+                    <option value="------">Без категории</option>
+                    <option value="Личное">Личное</option>
+                    <option value="Работа">Работа</option>
+                    <option value="Учёба ">Учёба</option>
+                </select>
+            </div>
 
-        <label for="comment">Комментарий:</label>
-        <textarea id="comment" name="comment"></textarea>
+            <div>
+                <label for="comment">Комментарий:</label>
+                <textarea id="comment" name="comment"></textarea>
+            </div>
 
-        <button type="submit">Создать событие</button>
-    </form>
+            <div>
+                <button type="submit">Создать событие</button>
+            </div>
+        </form>
+    </div>
 {% endblock %}

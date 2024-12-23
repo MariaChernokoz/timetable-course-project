@@ -3,9 +3,10 @@
 {% block title %}Мои события{% endblock %}
 
 {% block content %}
-    <h1>Мои события</h1>
+<h1>Мои события</h1>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/events.css') }}">
 
-    {% with messages = get_flashed_messages(with_categories=True) %}
+{% with messages = get_flashed_messages(with_categories=True) %}
     {% if messages %}
         <ul>
         {% for category, message in messages %}
@@ -13,21 +14,33 @@
         {% endfor %}
         </ul>
     {% endif %}
-    {% endwith %}
+{% endwith %}
 
-    <a href="{{ url_for('create_event') }}">Создать новое событие</a>
+<a href="{{ url_for('create_event') }}" class="add-task-button">Создать новое событие</a>
 
-    {% if events_by_date %}
-        {% for date, events in events_by_date.items() %}
-            <h2>{{ date.strftime('%Y-%m-%d') }}</h2>
-            <ul>
-                {% for event_name, start_time, end_time, event_location in events %}
-                     <li>{{ event_name }} ({{ start_time }}-{{end_time}}), {{event_location}}</li>
+{% if events_by_date %}
+    {% for date, events in events_by_date.items() %}
+        <h2>{{ date.strftime('%Y-%m-%d') }}</h2>
+        <div class="task-list-container">
+            <ul class="task-list">
+                {% for event_name, start_time, end_time, event_location, category, comment in events %}
+                    <li class="task-item">
+                        <div class="task-category {{ category }}">{{ category }}</div> <!-- Категория слева -->
+                        <div class="task-info">
+                            <span class="task-name">{{ event_name }}</span>
+                            <span class="task-deadline">({{ start_time }} - {{ end_time }}), {{ event_location }}</span>
+                        </div>
+                        {% if comment %}
+                            <div class="task-comment" style="margin-left: auto;">
+                                {{ comment }}
+                            </div>
+                        {% endif %}
+                    </li>
                 {% endfor %}
             </ul>
-        {% endfor %}
-    {% else %}
-        <p>Нет событий.</p>
-    {% endif %}
-
+        </div>
+    {% endfor %}
+{% else %}
+    <p class="task-empty">Нет событий.</p>
+{% endif %}
 {% endblock %}
