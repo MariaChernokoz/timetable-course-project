@@ -614,3 +614,47 @@ def send_friend_request(recipient_login):
         return render_template('friends.html', friends=friends, active_page='friends')
 
     return redirect(url_for('friends'))
+
+
+#______________ПРОСМОТР СОБЫТИЙ ДРУГА_______________
+@app.route('/view-friend-events/<friend_username>')
+def view_friend_events(friend_username):
+    conn = connect_to_db()
+    events_by_date = {}
+    cur = None
+    current_time = datetime.now(pytz.utc)  # Получаем текущее время с часовым поясом UTC
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT Event_ID, Event_name, Start_time_and_date, End_time_and_date, Location, Category, Comment
+            FROM Events WHERE User_login = %s ORDER BY Start_time_and_date
+        """, (friend_username,))  #  Смотрим события по friend_username в бд
+
+        fetched_events = cur.fetchall()
+        for event in fetched_events:
+            event_id, event_name, start_time, end_time, location, category, comment = event
+
+            # Преобразуем end_time в UTC, если он не имеет информации о часовом поясе
+            if end_time.tzinfo is None:
+                end_time = end_time.replace(tzinfo=pytz.utc)  # Устанавливаем UTC, если нет информации о часовом поясе
+
+            # Проверяем, прошел ли уже срок события
+            if end_time < current_time:
+                # Удаляем событие из базы данных, если оно прошло
+                cur.execute("DELETE FROM Events WHERE Event_ID = %s AND User_login = %s",
+                            (event_id, friend_username))  # Изменено на friend_username
+                conn.commit()  # Подтверждаем изменение
+            else:
+                event_date = start_time.date()  # Получаем только дату из Start_time_and_date
+                if event_date not in events_by_date:
+                    events_by_date[event_date] = []
+                events_by_date[event_date].append(event)  # Добавляем всю запись события
+
+    except psycopg.Error as e:
+        flash(f"Ошибка базы данных: {e}", "error")
+    finally:
+        if cur:
+            cur.close()
+        conn.close()
+
+    return render_template('view-friend-events.html', active_page='friends', events_by_date=events_by_date)
