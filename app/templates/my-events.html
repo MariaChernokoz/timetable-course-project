@@ -1,7 +1,52 @@
 {% extends "base.html" %}
 
-{% block title %}Приветствие{% endblock %}
+{% block title %}Мои события{% endblock %}
 
 {% block content %}
-    <h1>Привет1!!!!!!!</h1>
+<h1>Мои события</h1>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/events.css') }}">
+
+{% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+        <ul>
+        {% for category, message in messages %}
+            <li class="{{ category }}">{{ message }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+{% endwith %}
+
+<a href="{{ url_for('create_event') }}" class="add-task-button">Создать новое событие</a>
+
+{% if events_by_date %}
+    {% for date, events in events_by_date.items() %}
+        <h2>{{ date.strftime('%Y-%m-%d') }}</h2>
+        <div class="task-list-container">
+            <ul class="task-list">
+                {% for event in events %}
+                    {# Предполагаем, что event содержит (Event_ID, Event_name, Start_time_and_date, End_time_and_date, LOCATION, Category, COMMENT) #}
+                    <li class="task-item">
+                        <div class="task-category {{ event[5] }}">{{ event[5] }}</div> <!-- Категория слева -->
+                        <div class="task-info">
+                            <span class="task-name">{{ event[1] }}</span>
+                            <span class="task-deadline">({{ event[2].strftime('%H:%M') }} - {{ event[3].strftime('%H:%M') }}), {{ event[4] }}</span>
+                        </div>
+                        {% if event[6] %}  {# Проверяем существует ли комментарий #}
+                            <div class="task-comment" style="margin-left: auto;">
+                                {{ event[6] }}
+                            </div>
+                        {% endif %}
+
+                        <!-- Кнопка удаления вне рамки события -->
+                        <form action="{{ url_for('delete_event', event_id=event[0]) }}" method="POST" style="display:inline;float:right;margin-left: 10px;">
+                            <button type="submit" class="task-button" onclick="return confirm('Вы уверены, что хотите удалить это событие?');">Удалить</button>
+                        </form>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endfor %}
+{% else %}
+    <p class="task-empty">Нет событий.</p>
+{% endif %}
 {% endblock %}

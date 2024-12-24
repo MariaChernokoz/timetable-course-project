@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Редактировать событие{% endblock %}
+
+{% block content %}
+    <h1>Редактировать событие</h1>
+     {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+        <ul>
+        {% for category, message in messages %}
+            <li class="{{ category }}">{{ message }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+    {% endwith %}
+    {% if event %}
+        <form method="POST">
+        <label for="event_name">Название события:</label>
+        <input type="text" id="event_name" name="event_name" value="{{ event[2] }}" required>
+
+        <label for="start_time">Начало:</label>
+        <input type="datetime-local" id="start_time" name="start_time" value="{{ event[3].strftime('%Y-%m-%dT%H:%M') }}" required>
+
+        <label for="end_time">Конец:</label>
+        <input type="datetime-local" id="end_time" name="end_time" value="{{ event[4].strftime('%Y-%m-%dT%H:%M') }}" required>
+
+        <label for="location">Место:</label>
+        <input type="text" id="location" name="location" value="{{ event[5] }}">
+         <label for="category">Категория:</label>
+        <select id="category" name="category" required>
+            <option value="Личное" {% if event[6] == 'Личное' %}selected{% endif %}>Личное</option>
+            <option value="Работа" {% if event[6] == 'Работа' %}selected{% endif %}>Работа</option>
+            <option value="Учёба" {% if event[6] == 'Учёба' %}selected{% endif %}>Учёба</option>
+        </select>
+
+        <label for="comment">Комментарий:</label>
+        <textarea id="comment" name="comment">{{ event[7] }}</textarea>
+
+        <button type="submit">Сохранить изменения</button>
+    </form>
+    {% else %}
+       <p>Событие не найдено</p>
+    {% endif %}
+{% endblock %}

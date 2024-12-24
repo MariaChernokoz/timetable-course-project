@@ -10,14 +10,14 @@
         <ul class="task-list">
             {% for task in tasks %}
             <li class="task-item">
-                <form action="{{ url_for('delete_task', task_name=task[0]) }}" method="POST" class="task-form">
+                <form action="{{ url_for('delete_task', taskid=task[0]) }}" method="POST" class="task-form">
                     <button type="submit" class="task-button" onclick="return confirm('Вы уверены, что хотите удалить эту задачу?');">Выполнено</button>
                 </form>
                 <div class="task-info">
-                    <strong class="task-name">{{ task[0] }}</strong>
+                    <strong class="task-name">{{ task[1] }}</strong>
                     <span class="task-deadline">
-                        {% if task[1] %}
-                            Срок: {{ task[1] }}{% if task[2] %} в {{ task[2] }}{% endif %}
+                        {% if task[2] %}
+                            Срок: {{ task[2] }}
                         {% endif %}
                     </span>
                 </div>
