@@ -1,4 +1,4 @@
-.task-list-container {
+.friendEvent-list-container {
     margin-bottom: 20px;
     display: flex;
     flex-direction: column;
@@ -6,7 +6,7 @@
     position: relative;
 }
 
-.task-list {
+.friendEvent-list {
     list-style: none;
     padding: 0;
     width: 100%;
@@ -14,20 +14,16 @@
     box-sizing: border-box;
 }
 
-.task-name {
-    font-weight: bold;
-}
-
-.task-deadline {
+.friendEvent-deadline {
     font-size: 2 em;
     color: #606060;
 }
 
-.task-form {
+.friendEvent-form {
     display: inline-block;
 }
 
-.task-empty {
+.friendEvent-empty {
     text-align: center;
     font-style: italic;
     color: #777;
@@ -48,66 +44,6 @@
 
 .back-button:hover {
     background-color: #606060; /* Цвет фона при наведении */
-}
-
-
-.modal {
-    display: none;
-    position: absolute;
-    z-index: 1;
-
-    overflow: auto;
-    background-color: rgba(0,0,0,0.4);
-
-    flex-direction: column;
-}
-
-.modal-content {
-    background-color: #404040;
-    padding: 20px;
-    border: 1px solid #606060;
-    width: 400px;
-    border-radius: 10px;
-    color: #fff;
-    box-sizing: border-box;
-}
-
-.modal-form {
-    display: flex;
-    flex-direction: column;
-}
-.modal-label {
-    margin-bottom: 5px;
-    font-weight: bold;
-}
-.modal-input {
-    margin-bottom: 10px;
-    padding: 8px;
-    border: 1px solid #606060;
-    border-radius: 5px;
-    color: #fff;
-    background-color: #303030;
-}
-
-.modal-buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-}
-
-.modal-submit, .modal-close {
-    padding: 8px 15px;
-    border: none;
-    cursor: pointer;
-    border-radius: 5px;
-}
-.modal-submit {
-  background-color: #804040;
-    color: white;
-}
-.modal-close {
-     background-color: #804040;
-    color: white;
 }
 
 .messages-list {
@@ -132,19 +68,7 @@
     color: #721c24;
 }
 
-
-/* .task-item {
-    display: flex;
-    align-items: center;
-    padding: 10px;
-    border: 1px solid #404040;
-    border-radius: 5px;
-    margin-bottom: 10px;
-    box-sizing: border-box;
-    justify-content: space-between; /* Позволяет разместить элементы по краям */
-}
-*/
-.task-comment {
+.friendEvent-comment {
     margin-left: 20px; /* Добавьте отступы со стороны комментария, если это нужно */
     color: #555; /* Цвет текста комментария */
     font-size: 0.9em; /* Размер шрифта */
@@ -154,52 +78,8 @@ h1, h2 {
     text-align: center;
 }
 
-.comment {
-       position: relative;
-       padding-left: 20px; /* Отступ для иконки */
-   }
 
-   .comment::before {
-       content: ''; /* Пустое содержимое */
-       position: absolute;
-       left: 0;
-       top: 50%;
-       transform: translateY(-50%);
-       width: 10px; /* Ширина иконки */
-       height: 10px; /* Высота иконки */
-       background-color: #404040; /* Цвет иконки */
-       border-radius: 50%; /* Круглая форма */
-   }
-
-
-.task-category {
-    padding: 4px 8px;
-    border-radius: 5px;
-    margin-right: 10px; /* Отступ между категорией и информацией о событии */
-
-}
-
-.task-category.Личное {
-    background-color: #fcaf3c;
-    color: #fff;
-}
-
-.task-category.Работа {
-    background-color: #8EB9FF;
-    color: #fff;
-}
-
-.task-category.Учёба {
-    background-color: #ed5a6b;
-    color: #fff;
-}
-
-.task-category.---------- {
-    color: #fff;
-}
-
-
-.task-item {
+.friendEvent-item {
     display: flex;
     justify-content: space-between; /* Позволяет разместить элементы по краям */
     align-items: center; /* Выравнивание по вертикали */
@@ -210,19 +90,19 @@ h1, h2 {
     box-sizing: border-box;
 }
 
-.task-info {
+.friendEvent-info {
     display: flex;
     flex-direction: column;
     margin-left: 10px; /* Добавлено отступ слева */
     flex-grow: 1; /* Позволяет занять доступное пространство */
 }
 
-.task-form {
+.friendEvent-form {
     display: inline-block;
-    /* Другие стили не нужны, если вы используете .task-button для кнопки */
+    /* Другие стили не нужны, если вы используете .friendEvent-button для кнопки */
 }
 
-.task-button {
+.friendEvent-button {
     background-color: #800000;
     color: white;
     border: none;
@@ -234,17 +114,3 @@ h1, h2 {
     top: -5px; /* Поднимет кнопку немного вверх относительно рамки */
 }
 
-.add-button {
-    background-color: #404040; /* Темно-бордовый */
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-left: 10px; /* Отступ между кнопками */
-}
-
-.add-button:hover {
-    background-color: #800020; /* Темнее при наведении */
-    color: white;
-}

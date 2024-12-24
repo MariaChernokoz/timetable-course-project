@@ -23,12 +23,12 @@
 {% if events_by_date %}
     {% for date, events in events_by_date.items() %}
         <h2>{{ date.strftime('%Y-%m-%d') }}</h2>
-        <div class="task-list-container">
-            <ul class="task-list">
+        <div class="friendEvent-list-container">
+            <ul class="friendEvent-list">
                 {% for event in events %}
-                    <li class="task-item">
-                        <div class="task-info">
-                            <span class="task-deadline">{{ event[2] }}</span>
+                    <li class="friendEvent-item">
+                        <div class="friendEvent-info">
+                            <span class="friendEvent-deadline">{{ event[2] }}</span>
                         </div>
                     </li>
                 {% endfor %}
@@ -36,6 +36,6 @@
         </div>
     {% endfor %}
 {% else %}
-    <p class="task-empty">Нет событий.</p>
+    <p class="friendEvent-empty">Нет событий.</p>
 {% endif %}
 {% endblock %}

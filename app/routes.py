@@ -420,6 +420,30 @@ def decline_friend_request(request_id):
 
     return redirect(url_for('friendsrequests'))
 
+@app.route('/cancel_friend_request/<recipient_login>', methods=['POST'])
+def cancel_friend_request(recipient_login):
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+
+    conn = connect_to_db()
+
+    if conn:
+        cur = conn.cursor()
+
+        # Логика для отмены запроса
+        cur.execute("DELETE FROM FriendRequest WHERE recipient_login = %s", (recipient_login,))
+        conn.commit()
+
+        flash("Запрос на дружбу был отменен.", "info")
+
+        cur.close()
+        conn.close()
+    else:
+        flash("Ошибка подключения к базе данных", "danger")
+
+    return redirect(url_for('friendsrequests'))
+
+
 @app.route('/add_friend/<friend_login>', methods=['POST'])
 def add_friend(friend_login):
     if not current_user.is_authenticated:
@@ -667,3 +691,4 @@ def view_friend_events(friend_username):
         conn.close()
 
     return render_template('view-friend-events.html', active_page='friends', events_by_date=events_by_date, friend_name=friend_username)
+
