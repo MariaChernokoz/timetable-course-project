@@ -88,7 +88,6 @@ def registration():
 def base():
     return render_template("base.html")
 
-
 @app.route('/create-event', methods=["GET", "POST"])
 def create_event():
     if request.method == "POST":
@@ -153,6 +152,7 @@ def create_event():
 
                 # Создаем экземпляры события с привязкой к Regularity_ID
                 current_event_start_time = start_time
+                current_event_start_time += timedelta(weeks=int(regularity_interval))
                 while current_event_start_time <= end_repeat:
                     cur.execute(
                         """
@@ -229,7 +229,7 @@ def delete_event(event_id):
 
             if regularity_id:
                 regularity_id = regularity_id[0]
-                delete_option = request.form.get('delete_option')
+                delete_option = request.form.get(f'delete_option-{event_id}')  # Исправлено на правильное имя
 
                 if delete_option == 'all':
                     cur.execute("DELETE FROM Events WHERE Regularity_ID = %s", (regularity_id,))
