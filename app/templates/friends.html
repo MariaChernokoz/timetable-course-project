@@ -51,9 +51,12 @@
             <li class="friend-item">
                 <div class="friend-info">
                     <span class="friend-name">{{ friend[0] }}</span>
-                    <form action="{{ url_for('remove_friend', friend_login=friend[0]) }}" method="POST" style="display:inline;">
-                        <button class="delete-button" type="submit">Удалить друга</button>
-                    </form>
+                    <div class="button-container">
+                        <form action="{{ url_for('remove_friend', friend_login=friend[0]) }}" method="POST" style="display:inline;">
+                            <button class="delete-button" type="submit">Удалить друга</button>
+                        </form>
+                        <a href="{{ url_for('view_friend_events', friend_username=friend[0]) }}" >Посмотреть события друга</a>
+                    </div>
                 </div>
             </li>
         {% endfor %}
