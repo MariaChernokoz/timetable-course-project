@@ -4,7 +4,7 @@
 
 {% block content %}
 <h1>Мои события</h1>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/events.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/events.css') }}">
 
 {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
@@ -28,44 +28,42 @@
             <ul class="task-list">
                 {% for event in events %}
                 <li class="task-item">
-                    <div class="task-category {{ event[5] }}">{{ event[5] }}</div>
+                    <div class="task-category {{ event['category'] }}">{{ event['category'] }}</div>
                     <div class="task-info">
-                        <span class="task-name">{{ event[1] }}</span>
-                        <span class="task-deadline">({{ event[2].strftime('%H:%M') }} - {{ event[3].strftime('%H:%M') }}), {{ event[4] }}</span>
+                        <span class="task-name">{{ event['name'] }}</span>
+                        <span class="task-deadline">({{ event['time'] }}), {{ event['location'] }}</span>
                     </div>
-                    {% if event[6] %}
+                    {% if event['comment'] %}
                     <div class="task-comment" style="margin-left: auto;">
-                        {{ event[6] }}
+                        {{ event['comment'] }}
                     </div>
                     {% endif %}
 
                     <!-- Кнопка для открытия модального окна -->
-                    <button onclick="openModal({{ event[0] }})" class="task-button">Удалить</button>
+                    <button onclick="openModal({{ event['id'] }})" class="task-button">Удалить</button>
 
                     <!-- Модальное окно -->
-                    <div id="modal{{ event[0] }}" class="modal">
+                    <div id="modal{{ event['id'] }}" class="modal">
                         <div class="modal-content">
                             <div class="modal-header">Подтверждение удаления</div>
                             <div class="modal-body">
-                                <form action="{{ url_for('delete_event', event_id=event[0]) }}" method="POST">
+                                <form action="{{ url_for('delete_event', event_id=event['id']) }}" method="POST">
                                     <label>
                                         <input type="radio" name="delete_option" value="single" checked> Удалить это событие
                                     </label><br>
-                                    {% if event[7] is not none %}  <!-- event[8] содержит Regularity_ID -->
+                                    {% if event['regularity_id'] is not none %}  <!-- event['regularity_id'] хранит аналогичный ID для повторяющихся событий -->
                                     <label>
                                         <input type="radio" name="delete_option" value="all"> Удалить все повторяющиеся события
                                     </label><br>
                                     {% endif %}
                                     <div class="modal-buttons">
-                                        <button type="button" class="modal-close" onclick="closeModal({{ event[0] }})">Отмена</button>
+                                        <button type="button" class="modal-close" onclick="closeModal({{ event['id'] }})">Отмена</button>
                                         <button type="submit" class="modal-submit">Подтвердить удаление</button>
                                     </div>
                                 </form>
                             </div>
                         </div>
                     </div>
-
-
                 </li>
                 {% endfor %}
             </ul>

@@ -1,0 +1,244 @@
+.task-list-container {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.task-list {
+    list-style: none;
+    padding: 0;
+    width: 100%;
+    max-width: 600px;
+    box-sizing: border-box;
+}
+
+.task-name {
+    font-weight: bold;
+}
+
+.task-deadline {
+    font-size: 0.9em;
+    color: #777;
+}
+
+.task-form {
+    display: inline-block;
+}
+
+.task-empty {
+    text-align: center;
+    font-style: italic;
+    color: #777;
+}
+
+.add-task-button {
+    margin: 10px auto; /* Центрирование кнопки */
+    text-decoration: none;
+    padding: 10px 20px;
+    background-color: #404040;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+    box-sizing: border-box;
+    width: fit-content; /* Ширина кнопки подстраивается под содержимое */
+    display: block; /* Убедитесь, что кнопка является блочным элементом для центрирования */
+}
+
+
+.messages-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 10px;
+}
+
+.message {
+    padding: 10px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+}
+
+.message.success {
+    background-color: #b87070;
+    color: #white;
+}
+
+.message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* .task-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #404040;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+    justify-content: space-between; /* Позволяет разместить элементы по краям */
+}
+*/
+
+.task-comment {
+    margin-left: 20px; /* Добавьте отступы со стороны комментария, если это нужно */
+    color: #555; /* Цвет текста комментария */
+    font-size: 0.9em; /* Размер шрифта */
+}
+
+h1, h2 {
+    text-align: center;
+}
+
+.comment {
+       position: relative;
+       padding-left: 20px; /* Отступ для иконки */
+   }
+
+   .comment::before {
+       content: ''; /* Пустое содержимое */
+       position: absolute;
+       left: 0;
+       top: 50%;
+       transform: translateY(-50%);
+       width: 10px; /* Ширина иконки */
+       height: 10px; /* Высота иконки */
+       background-color: #404040; /* Цвет иконки */
+       border-radius: 50%; /* Круглая форма */
+   }
+
+
+.task-category {
+    padding: 4px 8px;
+    border-radius: 5px;
+    margin-right: 10px; /* Отступ между категорией и информацией о событии */
+
+}
+
+.task-category.Личное {
+    background-color: #fcaf3c;
+    color: #fff;
+}
+
+.task-category.Работа {
+    background-color: #8EB9FF;
+    color: #fff;
+}
+
+.task-category.Учёба {
+    background-color: #ed5a6b;
+    color: #fff;
+}
+
+.task-category.---------- {
+    color: #fff;
+}
+
+
+.task-item {
+    display: flex;
+    justify-content: space-between; /* Позволяет разместить элементы по краям */
+    align-items: center; /* Выравнивание по вертикали */
+    padding: 10px;
+    border: 1px solid #404040;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+}
+
+.task-info {
+    display: flex;
+    flex-direction: column;
+    margin-left: 10px; /* Добавлено отступ слева */
+    flex-grow: 1; /* Позволяет занять доступное пространство */
+}
+
+.task-form {
+    display: inline-block;
+    /* Другие стили не нужны, если вы используете .task-button для кнопки */
+}
+
+.task-button {
+    background-color: #800000;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    cursor: pointer;
+    border-radius: 5px;
+    margin-left: 10px; /* Отступ для отделения от рамки события */
+    position: relative;
+    top: -5px; /* Поднимет кнопку немного вверх относительно рамки */
+}
+
+.alert {
+    padding: 15px;
+    margin-top: 50px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    color: white;
+    background-color: #333333; /* Серый цвет по умолчанию */
+}
+
+.alert.error {
+    background-color: #800000; /* Красный для ошибок */
+}
+
+.alert.success {
+    background-color: #4CAF50; /* Зеленый для успешных сообщений */
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 500px;
+    border-radius: 5px;
+}
+
+.modal-header {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.modal-body {
+    margin: 10px 0;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.modal-submit, .modal-close {
+    padding: 8px 15px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.modal-submit {
+    background-color: #804040;
+    color: white;
+}
+
+.modal-close {
+    background-color: #804040;
+    color: white;
+}

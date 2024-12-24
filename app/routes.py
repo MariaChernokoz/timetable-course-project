@@ -223,19 +223,37 @@ def my_events():
 
             # Преобразуем end_time в UTC, если он не имеет информации о часовом поясе
             if end_time.tzinfo is None:
-                end_time = end_time.replace(tzinfo=pytz.utc)  # Устанавливаем UTC, если нет информации о часовом поясе
+                end_time = end_time.replace(tzinfo=pytz.utc)
 
             # Проверяем, прошел ли уже срок события
             if end_time < current_time:
                 # Удаляем событие из базы данных, если оно прошло
                 cur.execute("DELETE FROM Events WHERE Event_ID = %s AND User_login = %s",
                             (event_id, current_user.user_login))
-                conn.commit()  # Подтверждаем изменение
+                conn.commit()
             else:
+                # Форматируем даты и время
+                if start_time.date() != end_time.date():
+                    # Если события начинаются и заканчиваются в разные дни
+                    display_time = f"{start_time.strftime('%Y-%m-%d')} {start_time.strftime('%H:%M')} - " \
+                                   f"{end_time.strftime('%Y-%m-%d')} {end_time.strftime('%H:%M')}"
+                else:
+                    # Если события начинаются и заканчиваются в один день
+                    display_time = f"{start_time.strftime('%H:%M')} - {end_time.strftime('%H:%M')}"
+
+                event_entry = {
+                    "id": event_id,
+                    "name": event_name,
+                    "time": display_time,
+                    "location": location,
+                    "category": category,
+                    "comment": comment
+                }
+
                 event_date = start_time.date()  # Получаем только дату из Start_time_and_date
                 if event_date not in events_by_date:
                     events_by_date[event_date] = []
-                events_by_date[event_date].append(event)  # Добавляем всю запись события
+                events_by_date[event_date].append(event_entry)  # Добавляем запись события
 
     except psycopg.Error as e:
         flash(f"Ошибка базы данных: {e}", "error")
@@ -245,7 +263,6 @@ def my_events():
         conn.close()
 
     return render_template('my-events.html', active_page='my_events', events_by_date=events_by_date)
-
 
 @app.route('/events/delete/<int:event_id>', methods=['POST'])
 def delete_event(event_id):
@@ -354,10 +371,10 @@ def delete_task(taskid):
     return redirect(url_for('todos'))
 
 
-
-@app.route('/shared-events')
+'''@app.route('/shared-events')
 def shared_events():
    return render_template('shared-events.html', active_page = 'shared_events')
+'''
 
 @app.route('/friendsrequests')
 def friendsrequests():
@@ -722,3 +739,183 @@ def view_friend_events(friend_username):
 
     return render_template('view-friend-events.html', active_page='friends', events_by_date=events_by_date, friend_name=friend_username)
 
+@app.route('/shared-events')
+def shared_events():
+    conn = connect_to_db()
+    events_by_date = {}
+    cur = None
+    current_time = datetime.now(pytz.utc)  # Получаем текущее время с часовым поясом UTC
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT se.Event_ID, se.Event_name, se.Start_time_and_date, se.End_time_and_date, 
+                   se.LOCATION, se.Category, se.COMMENT
+            FROM SharedEvents se
+            JOIN JointSharedEventParticipation jsep ON se.Event_ID = jsep.Event_ID
+            WHERE jsep.User_login = %s
+            ORDER BY se.Start_time_and_date
+        """, (current_user.user_login,))
+
+        fetched_events = cur.fetchall()
+        for event in fetched_events:
+            event_id, event_name, start_time, end_time, location, category, comment = event
+
+            # Преобразуем end_time в UTC, если он не имеет информации о часовом поясе
+            if end_time.tzinfo is None:
+                end_time = end_time.replace(tzinfo=pytz.utc)
+
+            # Проверяем, прошел ли уже срок события
+            if end_time < current_time:
+                # Удаляем событие из базы данных, если оно прошло
+                cur.execute("DELETE FROM SharedEvents WHERE Event_ID = %s",
+                            (event_id,))
+                conn.commit()
+            else:
+                # Форматируем даты и время
+                if start_time.date() != end_time.date():
+                    # Если события начинаются и заканчиваются в разные дни
+                    display_time = f"{start_time.strftime('%Y-%m-%d')} {start_time.strftime('%H:%M')} - " \
+                                   f"{end_time.strftime('%Y-%m-%d')} {end_time.strftime('%H:%M')}"
+                else:
+                    # Если события начинаются и заканчиваются в один день
+                    display_time = f"{start_time.strftime('%H:%M')} - {end_time.strftime('%H:%M')}"
+
+                event_entry = {
+                    "id": event_id,
+                    "name": event_name,
+                    "time": display_time,
+                    "location": location,
+                    "category": category,
+                    "comment": comment
+                }
+
+                event_date = start_time.date()  # Получаем только дату из Start_time_and_date
+                if event_date not in events_by_date:
+                    events_by_date[event_date] = []
+                events_by_date[event_date].append(event_entry)  # Добавляем запись события
+
+    except psycopg.Error as e:
+        flash(f"Ошибка базы данных: {e}", "error")
+    finally:
+        if cur:
+            cur.close()
+        conn.close()
+
+    return render_template('shared-events.html', active_page='shared_events', events_by_date=events_by_date)
+
+
+@app.route('/create-shared-event', methods=["GET", "POST"])
+def create_shared_event():
+    if request.method == "POST":
+        event_name = request.form.get("event_name")
+        start_time = request.form.get("start_time")
+        end_time = request.form.get("end_time")
+        location = request.form.get("location")
+        category = request.form.get("category")
+        comment = request.form.get("comment")
+        is_regular = request.form.get("is_regular")  # Получаем значение чекбокса
+        regularity_interval = request.form.get("regularity_interval")
+        days_of_week = request.form.get("days_of_week")
+        end_repeat = request.form.get("end_repeat")  # Получаем дату окончания повторений
+
+        user_login = current_user.user_login
+
+        # Проверка обязательных полей
+        if not event_name or not start_time or not end_time:
+            flash("Пожалуйста, заполните все обязательные поля.", "error")
+            return redirect(url_for("create_event"))
+
+        # Проверка форматирования дней недели
+        if days_of_week and not all(day in '1234567' for day in days_of_week):
+            flash("Некорректный формат дней недели. Используйте только цифры от 1 до 7.", "error")
+            return redirect(url_for("create_event"))
+
+        # Проверка длины комментария
+        if comment and len(comment) > 30:
+            flash("Комментарий не должен превышать 30 символов.", "error")
+            return redirect(url_for("create_event"))
+
+        try:
+            start_time = datetime.strptime(start_time, "%Y-%m-%dT%H:%M")
+            end_time = datetime.strptime(end_time, "%Y-%m-%dT%H:%M")
+            if end_repeat:
+                end_repeat = datetime.strptime(end_repeat, "%Y-%m-%dT%H:%M")
+
+            # Проверка, не находится ли время в прошлом и время окончания больше времени начала
+            if start_time < datetime.now():
+                flash("Время начала не может быть в прошлом.", "error")
+                return redirect(url_for("create_event"))
+            if end_time <= start_time:
+                flash("Время окончания должно быть позже времени начала.", "error")
+                return redirect(url_for("create_event"))
+
+        except ValueError:
+            flash("Некорректный формат даты и времени.", "error")
+            return redirect(url_for("create_event"))
+
+        conn = connect_to_db()
+        try:
+            cur = conn.cursor()
+
+            # Если событие регулярное, сначала создаем регулярность.
+            if is_regular:
+                cur.execute(
+                    """
+                    INSERT INTO Regularity (Regularity_interval, Days_of_week, End_date)
+                    VALUES (%s, %s, %s) RETURNING Regularity_ID
+                    """,
+                    (regularity_interval, days_of_week, end_repeat)
+                )
+                regularity_id = cur.fetchone()[0]  # Получение созданного Regularity_ID
+
+                # Создание основного события с привязкой к Regularity_ID
+                cur.execute(
+                    """
+                    INSERT INTO Events (User_login, Event_name, Start_time_and_date, End_time_and_date, Location, Category, Comment, Regularity_ID)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING Event_ID
+                    """,
+                    (user_login, event_name, start_time, end_time, location, category, comment, regularity_id)
+                )
+            else:
+                # Если событие не регулярное, просто создаем его
+                cur.execute(
+                    """
+                    INSERT INTO Events (User_login, Event_name, Start_time_and_date, End_time_and_date, Location, Category, Comment)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING Event_ID
+                    """,
+                    (user_login, event_name, start_time, end_time, location, category, comment)
+                )
+
+            event_id = cur.fetchone()[0]  # Получение созданного Event_ID
+
+            # Если событие регулярное, создаем его экземпляры
+            if is_regular:
+                current_event_start_time = start_time
+                current_event_end_time = end_time
+                current_event_start_time += timedelta(weeks=int(regularity_interval))
+                current_event_end_time += timedelta(weeks=int(regularity_interval))
+                while current_event_start_time <= end_repeat:
+                    cur.execute(
+                        """
+                        INSERT INTO Events (User_login, Event_name, Start_time_and_date, End_time_and_date, Location, Category, Comment, Regularity_ID)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                        """,
+                        (user_login, event_name, current_event_start_time, current_event_end_time, location, category, comment,
+                         regularity_id)
+                    )
+                    current_event_start_time += timedelta(weeks=int(regularity_interval))  # Увеличиваем на интервал
+                    current_event_end_time += timedelta(weeks=int(regularity_interval))
+
+            conn.commit()
+            return redirect(url_for("my_events"))
+
+        except psycopg.Error as e:
+            conn.rollback()
+            flash(f"Ошибка базы данных при создании события: {e}", "error")
+            return redirect(url_for("my_events"))  # Перенаправление на страницу со списком событий
+
+        finally:
+            cur.close()
+            conn.close()
+
+    return render_template('create-event.html', active_page='my_events')
