@@ -16,6 +16,8 @@
     {% endif %}
 {% endwith %}
 
+
+<!-- ____вывод списка событий друга______ -->
 {% if events_by_date %}
     {% for date, events in events_by_date.items() %}
         <h2>{{ date.strftime('%Y-%m-%d') }}</h2>
