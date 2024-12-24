@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Cобытия друга{% endblock %}
+
+{% block content %}
+<h1>События друга</h1>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/view-friend-event.css') }}">
+
+{% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+        <ul>
+        {% for category, message in messages %}
+            <li class="{{ category }}">{{ message }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+{% endwith %}
+
+
+<!-- ____вывод списка событий друга______ -->
+{% if events_by_date %}
+    {% for date, events in events_by_date.items() %}
+        <h2>{{ date.strftime('%Y-%m-%d') }}</h2>
+        <div class="task-list-container">
+            <ul class="task-list">
+                {% for event in events %}
+                    {# Предполагаем, что event содержит (Event_ID, Event_name, Start_time_and_date, End_time_and_date, LOCATION, Category, COMMENT) #}
+                    <li class="task-item">
+                        <div class="task-info">
+                            <span class="task-name">{{ event[1] }}</span>
+                            <span class="task-deadline">({{ event[2].strftime('%H:%M') }} - {{ event[3].strftime('%H:%M') }}), {{ event[4] }}</span>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endfor %}
+{% else %}
+    <p class="task-empty">Нет событий.</p>
+{% endif %}
+{% endblock %}
