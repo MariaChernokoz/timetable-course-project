@@ -163,7 +163,24 @@ def my_events():
 
     return render_template('my-events.html', active_page='my_events', events_by_date=events_by_date)
 
-
+@app.route('/events/delete/<event_name>', methods=['POST'])
+def delete_event(event_name):
+    conn = connect_to_db()  # Подключение к базе данных
+    if conn:
+        cur = conn.cursor()  # Создание курсора для выполнения запросов
+        try:
+            # Выполнение SQL-запроса для удаления события
+            cur.execute("DELETE FROM Events WHERE User_login = %s AND Event_name = %s",
+                        (current_user.user_login, event_name))
+            conn.commit()  # Подтверждение изменений
+            flash("Событие успешно удалено!", "success")  # Уведомление об успешном удалении
+        except psycopg.Error as e:
+            conn.rollback()  # Откат изменений в случае ошибки
+            flash(f"Ошибка базы данных: {e}", "error")  # Уведомление об ошибке
+        finally:
+            cur.close()  # Закрытие курсора
+            conn.close()  # Закрытие соединения с базой данных
+    return redirect(url_for('my_events'))  # Перенаправление на страницу со списком событий
 '''
 @app.route('/friends')
 def friends():

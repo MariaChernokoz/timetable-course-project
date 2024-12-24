@@ -36,6 +36,10 @@
                             </div>
                         {% endif %}
                     </li>
+                    <!-- Кнопка удаления вне рамки события -->
+                    <form action="{{ url_for('delete_event', event_name=event_name) }}" method="POST" style="display:inline;float:right;margin-left: 10px;">
+                        <button type="submit" class="task-button" onclick="return confirm('Вы уверены, что хотите удалить это событие?');">Удалить</button>
+                    </form>
                 {% endfor %}
             </ul>
         </div>

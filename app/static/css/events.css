@@ -14,25 +14,6 @@
     box-sizing: border-box;
 }
 
-.task-item {
-    display: flex;
-    align-items: center;
-    padding: 10px;
-    border: 1px solid #404040;
-    border-radius: 5px;
-    margin-bottom: 10px;
-    box-sizing: border-box;
-}
-
-.task-info {
-    display: flex;
-    flex-direction: column;
-    margin-left: 10px; /* Добавлено отступ слева */
-}
-.task-item:last-child{
-     margin-bottom: 0px;
-}
-
 .task-name {
     font-weight: bold;
 }
@@ -46,15 +27,6 @@
     display: inline-block;
 }
 
-.task-button {
-    background-color: #800000;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    cursor: pointer;
-    border-radius: 5px;
-}
-
 .task-empty {
     text-align: center;
     font-style: italic;
@@ -63,6 +35,7 @@
 
 .add-task-button {
     margin: 10px auto; /* Центрирование кнопки */
+    text-decoration: none;
     padding: 10px 20px;
     background-color: #404040;
     color: #fff;
@@ -218,8 +191,42 @@ h1, h2 {
     color: #fff;
 }
 
-.task-category.Без кат {
-    background-color: #ed5a6b;
+.task-category.---------- {
     color: #fff;
 }
 
+
+.task-item {
+    display: flex;
+    justify-content: space-between; /* Позволяет разместить элементы по краям */
+    align-items: center; /* Выравнивание по вертикали */
+    padding: 10px;
+    border: 1px solid #404040;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+}
+
+.task-info {
+    display: flex;
+    flex-direction: column;
+    margin-left: 10px; /* Добавлено отступ слева */
+    flex-grow: 1; /* Позволяет занять доступное пространство */
+}
+
+.task-form {
+    display: inline-block;
+    /* Другие стили не нужны, если вы используете .task-button для кнопки */
+}
+
+.task-button {
+    background-color: #800000;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    cursor: pointer;
+    border-radius: 5px;
+    margin-left: 10px; /* Отступ для отделения от рамки события */
+    position: relative;
+    top: -5px; /* Поднимет кнопку немного вверх относительно рамки */
+}
