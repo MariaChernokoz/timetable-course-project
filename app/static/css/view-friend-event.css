@@ -19,8 +19,8 @@
 }
 
 .task-deadline {
-    font-size: 0.9em;
-    color: #777;
+    font-size: 2 em;
+    color: #606060;
 }
 
 .task-form {
@@ -33,18 +33,21 @@
     color: #777;
 }
 
-.add-task-button {
-    margin: 10px auto; /* Центрирование кнопки */
-    text-decoration: none;
-    padding: 10px 20px;
-    background-color: #404040;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-    border-radius: 10px;
-    box-sizing: border-box;
-    width: fit-content; /* Ширина кнопки подстраивается под содержимое */
-    display: block; /* Убедитесь, что кнопка является блочным элементом для центрирования */
+.back-button {
+    background-color: #404040; /* Цвет фона */
+    color: #fff; /* Цвет текста */
+    border: none; /* Без рамки */
+    padding: 10px 20px; /* Отступы */
+    border-radius: 10px; /* Закругленные углы */
+    cursor: pointer; /* Указатель при наведении */
+    text-align: center; /* Центрирование текста */
+    text-decoration: none; /* Убираем подчеркивание */
+    display: inline-block; /* Блочный элемент для центрирования */
+    transition: background-color 0.3s; /* Плавный переход цвета фона */
+}
+
+.back-button:hover {
+    background-color: #606060; /* Цвет фона при наведении */
 }
 
 
