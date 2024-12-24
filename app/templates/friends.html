@@ -3,9 +3,9 @@
 {% block title %}Список друзей{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/todos.css') }}">
-<div class="task-list-container">
-    <h1>Ваши друзья</h1>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/friends.css') }}">
+<div class="friend-list-container">
+    <h2>Ваши друзья</h2>
 
     {% if error %}
         <p class="danger">{{ error }}</p>
@@ -24,15 +24,11 @@
        {% endif %}
    {% endwith %}
 
-    {% if info %}
-        <p class="info">{{ info }}</p>
-    {% endif %}
-
-    <ul class="task-list">
+    <ul class="friend-list">
         {% for friend in friends %}
-            <li class="task-item">
-                <div class="task-info">
-                    <span class="task-name">{{ friend[0] }}</span>
+            <li class="friend-item">
+                <div class="friend-info">
+                    <span class="friend-name">{{ friend[0] }}</span>
                     <form action="{{ url_for('remove_friend', friend_login=friend[0]) }}" method="POST" style="display:inline;">
                         <button class="delete-button" type="submit">Удалить друга</button>
                     </form>
@@ -40,20 +36,22 @@
             </li>
         {% endfor %}
         {% if friends|length == 0 %}
-            <li class="task-item task-empty">У вас нет друзей.</li>
+            <li class="friend-item friend-empty">У вас нет друзей.</li>
         {% endif %}
     </ul>
 
-    <h1>Найти друга</h1>
+    <h2>Найти друга</h2>
     <form action="{{ url_for('search_friend') }}" method="POST">
         <input type="text" name="friend_login" placeholder="Введите логин друга" required>
-        <button class="add-task-button" type="submit">Поиск</button>
+        <button class="add-friend-button" type="submit">Поиск</button>
     </form>
 
     {% if search_result %}
         <h3>Результаты поиска:</h3>
         <p>Пользователь: {{ search_result.user_login }}</p>
-        {% if search_result.is_friend %}
+        {% if search_result.error_message %}
+            <p class="danger">{{ search_result.error_message }}</p>
+        {% elif search_result.is_friend %}
             <p>Этот пользователь уже в ваших друзьях.</p>
         {% else %}
             <form action="{{ url_for('send_friend_request', recipient_login=search_result.user_login) }}" method="POST">
@@ -61,5 +59,6 @@
             </form>
         {% endif %}
     {% endif %}
+
 </div>
 {% endblock %}

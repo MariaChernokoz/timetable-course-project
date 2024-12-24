@@ -4,9 +4,9 @@
 
 {% block content %}
 
-<link rel="stylesheet" href="{{ url_for('static', filename='css/todos.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/friends.css') }}">
 
-<div class="task-list-container">
+<div class="friend-list-container">
     <h1>Заявки в друзья</h1>
 
     {% if error %}
@@ -26,34 +26,36 @@
        {% endif %}
    {% endwith %}
 
-    <ul class="task-list">
+    <ul class="friend-list">
         {% for request in friend_requests %}
-            <li class="task-item">
-                <div class="tasks2-info">
-                    {{ request.senders_login }}
-                    <form action="{{ url_for('accept_friend_request', request_id=request.request_id) }}" method="POST" style="display:inline;">
-                        <button class="add-button" type="submit">Принять</button>
-                    </form>
-                    <form action="{{ url_for('decline_friend_request', request_id=request.request_id) }}" method="POST" style="display:inline;">
-                        <button class="add-button" type="submit">Отклонить</button>
-                    </form>
+            <li class="friend-item">
+                <div class="friends2-info">
+                    <span>{{ request.senders_login }}</span>
+                    <div class="button-container">
+                        <form action="{{ url_for('accept_friend_request', request_id=request.request_id) }}" method="POST" style="display:inline;">
+                            <button class="add-button" type="submit">Принять</button>
+                        </form>
+                        <form action="{{ url_for('decline_friend_request', request_id=request.request_id) }}" method="POST" style="display:inline;">
+                            <button class="add-button" type="submit">Отклонить</button>
+                        </form>
+                    </div>
                 </div>
             </li>
         {% endfor %}
         {% if friend_requests|length == 0 %}
-            <li class="task-item task-empty">У вас нет запросов на дружбу.</li>
+            <li class="friend-item friend-empty">У вас нет запросов на дружбу.</li>
         {% endif %}
     </ul>
 
-    <h2>Вы отправили запросы на дружбу:</h2>
-    <ul class="task-list">
+    <h1>Вы отправили запросы на дружбу:</h1>
+    <ul class="friend-list">
         {% for recipient in friend_requests_sent %}
-            <li class="task-item">
+            <li class="friend-item">
                 {{ recipient }}
             </li>
         {% endfor %}
         {% if friend_requests_sent|length == 0 %}
-            <li class="task-item task-empty">Вы не отправили запросов на дружбу.</li>
+            <li class="friend-item friend-empty">Вы не отправили запросов на дружбу.</li>
         {% endif %}
     </ul>
 </div>

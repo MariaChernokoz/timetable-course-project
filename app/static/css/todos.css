@@ -24,51 +24,10 @@
     box-sizing: border-box;
 }
 
-.button-container {
-    display: flex; /* Используем flexbox для выравнивания кнопок */
-    justify-content: flex-end; /* Выравниваем кнопки по правому краю */
-    margin-top: 10px; /* Отступ сверху, если нужно */
-}
-
-.add-button {
-    background-color: #404040; /* Темно-бордовый */
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-left: 10px; /* Отступ между кнопками */
-}
-
-.add-button:hover {
-    background-color: #800020; /* Темнее при наведении */
-    color: white;
-}
-
-.delete-button {
-    background-color: #800020; /* Темно-бордовый */
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    width: 100%;
-}
-
-.delete-button:hover {
-    background-color: #404040; /* Темнее при наведении */
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    width: 100%;
-}
-
 .task-info {
     display: flex;
     flex-direction: column;
-    margin-left: 10px; /* Добавлено отступ слева */
+    margin-left: 10px; /* Р”РѕР±Р°РІР»РµРЅРѕ РѕС‚СЃС‚СѓРї СЃР»РµРІР° */
 }
 .task-item:last-child{
      margin-bottom: 0px;
@@ -194,69 +153,4 @@
     background-color: #f8d7da;
     color: #721c24;
 }
-
-.tasks2-info {
-    display: flex; /* Используем flexbox для выравнивания элементов */
-    justify-content: space-between; /* Распределяем пространство между элементами */
-    align-items: center; /* Выравниваем элементы по центру по вертикали */
-}
-
-
-.flash-messages {
-    position: fixed; /* Зафиксировано в верхней части страницы */
-    top: 30px; /* Отступ сверху */
-    right: 10px; /* Отступ справа */
-    z-index: 1000; /* Обеспечьте, чтобы уведомления всегда были на переднем плане */
-}
-
-.alert {
-    padding: 15px;
-    margin-top: 50px;
-    margin-bottom: 20px;
-    border-radius: 4px;
-    color: white;
-    background-color: #333333; /* Серый цвет по умолчанию */
-}
-
-.alert.error {
-    background-color: #800000; /* Красный для ошибок */
-}
-
-.alert.success {
-    background-color: #4CAF50; /* Зеленый для успешных сообщений */
-}
-
-.close-btn {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 16px;
-    float: right;
-    cursor: pointer;
-    padding: 0;
-    margin-left: 15px;
-}
-
-/* Стили для выделенной даты */
-        .ui-datepicker .ui-state-active {
-            background-color: #800000 !important; /* Красно-бордовый цвет для выделенной даты */
-            color: white !important; /* Цвет текста выделенной даты */
-        }
-
-        /* Стили для даты при наведении */
-        .ui-datepicker .ui-state-hover {
-            background-color: #b22222; /* Цвет фона при наведении (более светлый красный) */
-        }
-
-        /* Стили для текущей даты */
-        .ui-datepicker .ui-datepicker-today {
-            background-color: #800000 !important; /* Красно-бордовый цвет для текущего дня */
-            color: white !important; /* Цвет текста текущего дня */
-        }
-
-        /* Для серых дат, которые не являются текущими */
-        .ui-datepicker .ui-datepicker-other-month {
-            color: #999; /* Цвет текста для дат в других месяцах (по желанию) */
-        }
-
 
