@@ -4,7 +4,7 @@ from app import app
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, current_user, logout_user
 from app.user import User
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 
 
@@ -98,6 +98,10 @@ def create_event():
         location = request.form.get("location")
         category = request.form.get("category")
         comment = request.form.get("comment")
+        is_regular = request.form.get("is_regular")  # Получаем значение чекбокса
+        regularity_interval = request.form.get("regularity_interval")
+        days_of_week = request.form.get("days_of_week")
+        end_repeat = request.form.get("end_repeat")  # Получаем дату окончания повторений
 
         user_login = current_user.user_login
 
@@ -109,6 +113,8 @@ def create_event():
         try:
             start_time = datetime.strptime(start_time, "%Y-%m-%dT%H:%M")
             end_time = datetime.strptime(end_time, "%Y-%m-%dT%H:%M")
+            if end_repeat:
+                end_repeat = datetime.strptime(end_repeat, "%Y-%m-%dT%H:%M")
 
             # Проверка, не находится ли время в прошлом и время окончания больше времени начала
             if start_time < datetime.now():
@@ -133,6 +139,30 @@ def create_event():
                 (user_login, event_name, start_time, end_time, location, category, comment)
             )
             event_id = cur.fetchone()[0]  # Получение созданного Event_ID
+
+            # Если событие регулярное, добавляем его в таблицу Regularity
+            if is_regular:
+                cur.execute(
+                    """
+                    INSERT INTO Regularity (Regularity_interval, Days_of_week, End_date)
+                    VALUES (%s, %s, %s) RETURNING Regularity_ID
+                    """,
+                    (regularity_interval, days_of_week, end_repeat)
+                )
+                regularity_id = cur.fetchone()[0]  # Получение созданного Regularity_ID
+
+                # Создаем экземпляры события с привязкой к Regularity_ID
+                current_event_start_time = start_time
+                while current_event_start_time <= end_repeat:
+                    cur.execute(
+                        """
+                        INSERT INTO Events (User_login, Event_name, Start_time_and_date, End_time_and_date, Location, Category, Comment, Regularity_ID)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                        """,
+                        (user_login, event_name, current_event_start_time, end_time, location, category, comment, regularity_id)
+                    )
+                    current_event_start_time += timedelta(weeks=int(regularity_interval))  # Увеличиваем на интервал
+
             conn.commit()
             return redirect(url_for("my_events"))  # Перенаправление на страницу со списком событий
         except psycopg.Error as e:
@@ -186,25 +216,44 @@ def my_events():
 
     return render_template('my-events.html', active_page='my_events', events_by_date=events_by_date)
 
+
 @app.route('/events/delete/<int:event_id>', methods=['POST'])
 def delete_event(event_id):
     conn = connect_to_db()
     if conn:
         cur = conn.cursor()
         try:
-            cur.execute("DELETE FROM Events WHERE User_login = %s AND Event_ID = %s",
-                        (current_user.user_login, event_id))
+            # Получаем Regularity_ID события
+            cur.execute("SELECT Regularity_ID FROM Events WHERE Event_ID = %s", (event_id,))
+            regularity_id = cur.fetchone()
+
+            if regularity_id:
+                regularity_id = regularity_id[0]
+                delete_option = request.form.get('delete_option')
+
+                if delete_option == 'all':
+                    cur.execute("DELETE FROM Events WHERE Regularity_ID = %s", (regularity_id,))
+                    flash("Все повторяющиеся события успешно удалены!", "success")
+                else:
+                    # Удаляем только это событие
+                    cur.execute("DELETE FROM Events WHERE User_login = %s AND Event_ID = %s",
+                                (current_user.user_login, event_id))
+                    flash("Событие успешно удалено!", "success")
+            else:
+                # Удаляем только это событие, если Regularity_ID нет
+                cur.execute("DELETE FROM Events WHERE User_login = %s AND Event_ID = %s",
+                            (current_user.user_login, event_id))
+                flash("Событие успешно удалено!", "success")
+
             conn.commit()
-            flash("Событие успешно удалено!", "success")
         except psycopg.Error as e:
             conn.rollback()
             flash(f"Ошибка базы данных: {e}", "error")
         finally:
             cur.close()
             conn.close()
+
     return redirect(url_for('my_events'))
-
-
 
 
 @app.route('/todos', methods=['GET', 'POST'])

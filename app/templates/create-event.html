@@ -43,21 +43,53 @@
             </div>
 
             <div>
+                <label>
+                    <input type="checkbox" id="is_regular" name="is_regular" value="1"> Регулярное событие
+                </label>
+            </div>
+
+            <div id="regularity_settings" style="display: none;">
+                <div>
+                    <label for="regularity_interval">Интервал (в неделях):</label>
+                    <input type="number" id="regularity_interval" name="regularity_interval" min="1" max="52">
+                </div>
+
+                <div>
+                    <label for="days_of_week">Дни недели (например, 135 для Пн, Ср, Пт):</label>
+                    <input type="text" id="days_of_week" name="days_of_week" maxlength="14">
+                </div>
+
+                <div>
+                    <label for="end_repeat">Конец повторений:</label>
+                    <input type="datetime-local" id="end_repeat" name="end_repeat">
+                </div>
+            </div>
+
+            <div>
                 <button type="submit" class="create-event-button">Создать событие</button>
             </div>
         </form>
     </div>
 
     <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        var now = new Date();
-        var currentDateTime = now.toISOString().slice(0, 16); // Получаем формат 'YYYY-MM-DDTHH:MM'
-        document.getElementById('start_time').setAttribute('min', currentDateTime); // Установка минимального значения
-        document.getElementById('end_time').setAttribute('min', currentDateTime); // Установка минимального значения
+        document.addEventListener("DOMContentLoaded", function() {
+            var now = new Date();
+            var currentDateTime = now.toISOString().slice(0, 16);
+            document.getElementById('start_time').setAttribute('min', currentDateTime);
+            document.getElementById('end_time').setAttribute('min', currentDateTime);
+            document.getElementById('start_time').value = currentDateTime;
+            document.getElementById('end_time').value = currentDateTime;
 
-        // Установка значения по умолчанию
-        document.getElementById('start_time').value = currentDateTime;
-        document.getElementById('end_time').value = currentDateTime;
-    });
+            var isRegularCheckbox = document.getElementById('is_regular');
+            var regularitySettings = document.getElementById('regularity_settings');
+
+            isRegularCheckbox.addEventListener('change', function() {
+                if (isRegularCheckbox.checked) {
+                    regularitySettings.style.display = 'block';
+                } else {
+                    regularitySettings.style.display = 'none';
+                }
+            });
+        });
     </script>
 {% endblock %}

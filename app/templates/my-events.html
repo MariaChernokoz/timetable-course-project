@@ -24,22 +24,28 @@
         <div class="task-list-container">
             <ul class="task-list">
                 {% for event in events %}
-                    {# Предполагаем, что event содержит (Event_ID, Event_name, Start_time_and_date, End_time_and_date, LOCATION, Category, COMMENT) #}
                     <li class="task-item">
-                        <div class="task-category {{ event[5] }}">{{ event[5] }}</div> <!-- Категория слева -->
+                        <div class="task-category {{ event[5] }}">{{ event[5] }}</div>
                         <div class="task-info">
                             <span class="task-name">{{ event[1] }}</span>
                             <span class="task-deadline">({{ event[2].strftime('%H:%M') }} - {{ event[3].strftime('%H:%M') }}), {{ event[4] }}</span>
                         </div>
-                        {% if event[6] %}  {# Проверяем существует ли комментарий #}
+                        {% if event[6] %}
                             <div class="task-comment" style="margin-left: auto;">
                                 {{ event[6] }}
                             </div>
                         {% endif %}
 
-                        <!-- Кнопка удаления вне рамки события -->
-                        <form action="{{ url_for('delete_event', event_id=event[0]) }}" method="POST" style="display:inline;float:right;margin-left: 10px;">
-                            <button type="submit" class="task-button" onclick="return confirm('Вы уверены, что хотите удалить это событие?');">Удалить</button>
+                        <!-- Форма для удаления события -->
+                        <form action="{{ url_for('delete_event', event_id=event[0]) }}" method="POST" style="display:inline;">
+                            <p>Вы хотите удалить это событие или все его повторяющиеся события?</p>
+                            <label>
+                                <input type="radio" name="delete_option" value="single" checked> Удалить только это событие
+                            </label><br>
+                            <label>
+                                <input type="radio" name="delete_option" value="all"> Удалить все повторяющиеся события
+                            </label><br>
+                            <button type="submit" class="task-button">Подтвердить удаление</button>
                         </form>
                     </li>
                 {% endfor %}
