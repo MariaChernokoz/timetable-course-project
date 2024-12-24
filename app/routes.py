@@ -387,6 +387,7 @@ def friendsrequests():
                            friend_requests=friend_requests_received,
                            friend_requests_sent=friend_requests_sent)
 
+
 @app.route('/accept_friend_request/<int:request_id>', methods=['POST'])
 def accept_friend_request(request_id):
     if not current_user.is_authenticated:
@@ -448,6 +449,30 @@ def decline_friend_request(request_id):
         flash("Ошибка подключения к базе данных", "danger")
 
     return redirect(url_for('friendsrequests'))
+
+@app.route('/cancel_friend_request/<recipient_login>', methods=['POST'])
+def cancel_friend_request(recipient_login):
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+
+    conn = connect_to_db()
+
+    if conn:
+        cur = conn.cursor()
+
+        # Логика для отмены запроса
+        cur.execute("DELETE FROM FriendRequest WHERE recipient_login = %s", (recipient_login,))
+        conn.commit()
+
+        flash("Запрос на дружбу был отменен.", "info")
+
+        cur.close()
+        conn.close()
+    else:
+        flash("Ошибка подключения к базе данных", "danger")
+
+    return redirect(url_for('friendsrequests'))
+
 
 @app.route('/add_friend/<friend_login>', methods=['POST'])
 def add_friend(friend_login):
@@ -645,7 +670,6 @@ def send_friend_request(recipient_login):
     return redirect(url_for('friends'))
 
 
-#______________ПРОСМОТР СОБЫТИЙ ДРУГА_______________
 @app.route('/view-friend-events/<friend_username>')
 def view_friend_events(friend_username):
     conn = connect_to_db()
@@ -657,7 +681,7 @@ def view_friend_events(friend_username):
         cur.execute("""
             SELECT Event_ID, Event_name, Start_time_and_date, End_time_and_date, Location, Category, Comment
             FROM Events WHERE User_login = %s ORDER BY Start_time_and_date
-        """, (friend_username,))  #  Смотрим события по friend_username в бд
+        """, (friend_username,))  # Смотрим события по friend_username в бд
 
         fetched_events = cur.fetchall()
         for event in fetched_events:
@@ -674,10 +698,20 @@ def view_friend_events(friend_username):
                             (event_id, friend_username))  # Изменено на friend_username
                 conn.commit()  # Подтверждаем изменение
             else:
+                # Проверяем, начинаются ли события и заканчиваются в разные дни
+                if start_time.date() != end_time.date():
+                    # Если события в разные дни, формируем строку с датами и временем
+                    event_time_display = f"{start_time.date()} {start_time.strftime('%H:%M')} - {end_time.date()} {end_time.strftime('%H:%M')}"
+                else:
+                    # Если события в один день, просто отображаем время
+                    event_time_display = f"{start_time.strftime('%H:%M')} - {end_time.strftime('%H:%M')}"
+
+                # Обновляем событие в массиве
+                event_with_time_display = (event_id, event_name, event_time_display, location, category, comment)
                 event_date = start_time.date()  # Получаем только дату из Start_time_and_date
                 if event_date not in events_by_date:
                     events_by_date[event_date] = []
-                events_by_date[event_date].append(event)  # Добавляем всю запись события
+                events_by_date[event_date].append(event_with_time_display)  # Добавляем обновленный элемент события
 
     except psycopg.Error as e:
         flash(f"Ошибка базы данных: {e}", "error")
@@ -686,4 +720,5 @@ def view_friend_events(friend_username):
             cur.close()
         conn.close()
 
-    return render_template('view-friend-events.html', active_page='friends', events_by_date=events_by_date)
+    return render_template('view-friend-events.html', active_page='friends', events_by_date=events_by_date, friend_name=friend_username)
+

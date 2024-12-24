@@ -7,25 +7,26 @@
 <div class="friend-list-container">
 
     <h1>Найти друга</h1>
-    <form action="{{ url_for('search_friend') }}" method="POST">
-        <input type="text" name="friend_login" placeholder="Введите логин друга" required>
-        <button class="add-friend-button" type="submit">Поиск</button>
+    <form action="{{ url_for('search_friend') }}" method="POST" class="friend-form">
+        <input type="text" class="friend-input" name="friend_login" placeholder="Введите логин пользователя" required>
+        <button class="add-button" type="submit">Поиск</button>
     </form>
 
     {% if search_result %}
-        <h3>Результаты поиска:</h3>
-        <p>Пользователь: {{ search_result.user_login }}</p>
+        <h3 class="result-title">Результаты поиска:</h3>
+        {% if search_result.user_login %}
+            <p class="search-result">Пользователь: {{ search_result.user_login }}</p>
+        {% endif %}
         {% if search_result.error_message %}
-            <p class="danger">{{ search_result.error_message }}</p>
+            <p class="result-message danger">{{ search_result.error_message }}</p>
         {% elif search_result.is_friend %}
-            <p>Этот пользователь уже в ваших друзьях.</p>
+            <p class="result-message">Этот пользователь уже в ваших друзьях.</p>
         {% else %}
             <form action="{{ url_for('send_friend_request', recipient_login=search_result.user_login) }}" method="POST">
                 <button class="add-button" type="submit">Отправить заявку в друзья</button>
             </form>
         {% endif %}
     {% endif %}
-
 
     <h1>Ваши друзья</h1>
 
@@ -55,7 +56,9 @@
                         <form action="{{ url_for('remove_friend', friend_login=friend[0]) }}" method="POST" style="display:inline;">
                             <button class="delete-button" type="submit">Удалить друга</button>
                         </form>
-                        <a href="{{ url_for('view_friend_events', friend_username=friend[0]) }}" >Посмотреть события друга</a>
+                        <form action="{{ url_for('view_friend_events', friend_username=friend[0]) }}" method="GET" style="display:inline;">
+                            <button class="view-button" type="submit">Посмотреть события</button>
+                        </form>
                     </div>
                 </div>
             </li>

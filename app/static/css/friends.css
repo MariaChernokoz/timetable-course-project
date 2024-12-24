@@ -1,5 +1,5 @@
 .friend-list-container {
-    margin-top: 50px;
+    margin-top: 10px;
     margin-bottom: 20px;
     display: flex;
     flex-direction: column;
@@ -23,47 +23,6 @@
     border-radius: 5px;
     margin-bottom: 10px;
     box-sizing: border-box;
-}
-
-.button-container {
-    display: flex; /* Используем flexbox для выравнивания кнопок */
-    justify-content: flex-start; /* Выравниваем кнопки по правому краю */
-    margin-top: 10px; /* Отступ сверху, если нужно */
-}
-
-.add-button {
-    background-color: #404040; /* Темно-бордовый */
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-left: 10px; /* Отступ между кнопками */
-}
-
-.add-button:hover {
-    background-color: #800020; /* Темнее при наведении */
-    color: white;
-}
-
-.delete-button {
-    background-color: #800020; /* Темно-бордовый */
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    width: 100%;
-}
-
-.delete-button:hover {
-    background-color: #404040; /* Темнее при наведении */
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    width: 100%;
 }
 
 .friend-info {
@@ -90,32 +49,11 @@
     display: inline-block;
 }
 
-.friend-button {
-    background-color: #800000;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    cursor: pointer;
-    border-radius: 5px;
-}
 
 .friend-empty {
     text-align: center;
     font-style: italic;
     color: #777;
-}
-
-.add-friend-button {
-    margin-top: 10px;
-    padding: 10px 20px;
-    background-color: #404040;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-    border-radius: 10px;
-    align-self: center;
-    box-sizing: border-box;
-    width: fit-content;
 }
 
 .messages-list {
@@ -184,3 +122,163 @@
 }
 
 
+.friend-form {
+    display: flex;
+    flex-direction: column; /* Измените направление на колонку */
+    align-items: center; /* Центрируем элементы по горизонтали */
+    width: 100%; /* Задаем ширину 100% для правильного выравнивания */
+}
+
+.friend-input {
+    padding: 10px; /* Отступы внутри поля ввода */
+    border: 1px solid #404040; /* Цвет границы */
+    border-radius: 5px; /* Закругленные углы */
+    width: 70%; /* Установите желаемую ширину, например, 70% */
+    max-width: 300px; /* Максимальная ширина, чтобы не растягивалось слишком сильно */
+    box-sizing: border-box; /* Учитываем отступы и границы в ширине */
+    margin-bottom: 10px; /* Отступ снизу для разделения с другими элементами */
+    font-size: 0.9em; /* Размер шрифта */
+    color: #333; /* Цвет текста */
+    text-align: center; /* Центрируем текст внутри поля ввода */
+}
+
+.result-message {
+    color: #f00;           /* Красный цвет для сообщений (альтернативные сообщения), если нужно */
+}
+
+.danger {
+    color: #ff0000;       /* Красный цвет для ошибок */
+}
+
+
+.result-title,
+.search-result,
+.result-message {
+    font-weight: bold;      /* Жирный текст для всех элементов */
+    font-size: 1em;        /* Размер шрифта */
+    color: #333;           /* Цвет текста */
+    margin: 10px 0;        /* Отступ сверху и снизу */
+    padding: 10px;         /* Отступы внутри элементов (при необходимости) */
+    border-radius: 5px;    /* Закругленные углы (при необходимости) */
+}
+
+.button-container {
+    display: flex;
+    justify-content: flex-end; /* Выравнивание по правому краю */
+    transition: background-color 0.3s;
+}
+
+.friend-button {
+    background-color: #800000;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.add-friend-button {
+    margin-top: 10px;
+    padding: 10px 20px;
+    background-color: #404040;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+    align-self: center;
+    box-sizing: border-box;
+    width: fit-content;
+}
+
+.add-button {
+    background-color: #404040; /* Темно-бордовый */
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 10px; /* Отступ между кнопками */
+}
+
+.add-button:hover {
+    background-color: #800020; /* Темнее при наведении */
+    color: white;
+}
+
+.delete-button {
+    background-color: #800020; /* Темно-бордовый */
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+    transform: translateX(-10px); /* Сдвиг влево на 10 пикселей */
+}
+
+.delete-button:hover {
+    background-color: #404040; /* Темнее при наведении */
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+}
+
+
+.view-button {
+    background-color: #404040; /* Цвет фона как у add-friend-button */
+    color: white; /* Цвет текста */
+    padding: 10px 15px; /* Отступы внутри кнопки */
+    border: none; /* Без границы */
+    border-radius: 5px; /* Закругленные углы */
+    cursor: pointer; /* Указатель при наведении */
+    width: 100%; /* Ширина кнопки */
+}
+
+.view-button:hover {
+    background-color: #800020; /* Темнее при наведении */
+    color: white; /* Цвет текста при наведении */
+}
+
+
+.add-button {
+    background-color: #404040; /* Цвет фона кнопки */
+    color: white; /* Цвет текста */
+    padding: 10px 15px; /* Отступы внутри кнопки */
+    border: none; /* Без границы */
+    border-radius: 5px; /* Закругленные углы */
+    cursor: pointer; /* Указатель при наведении */
+    margin-top: 10px; /* Отступ сверху для разделения с полем ввода */
+}
+
+.add-button:hover {
+    background-color: #800020; /* Темнее при наведении */
+}
+
+.accept-button, .cancel-button {
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 10px; /* Отступ между кнопками */
+}
+
+.accept-button {
+    background-color: #800020; /* Темно-бордовый */
+}
+
+.cancel-button {
+    background-color: #404040;
+}
+
+.accept-button:hover {
+    background-color: #404040; /* Темнее при наведении */
+}
+
+.cancel-button:hover {
+    background-color: #800020; /* Темнее при наведении */
+    color: white; /* Цвет текста при наведении */
+}
