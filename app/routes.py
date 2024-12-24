@@ -358,6 +358,7 @@ def friendsrequests():
                            friend_requests=friend_requests_received,
                            friend_requests_sent=friend_requests_sent)
 
+
 @app.route('/accept_friend_request/<int:request_id>', methods=['POST'])
 def accept_friend_request(request_id):
     if not current_user.is_authenticated:

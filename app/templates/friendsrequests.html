@@ -33,11 +33,13 @@
     <ul class="friend-list">
         {% for recipient in friend_requests_sent %}
             <li class="friend-item">
-                {{ recipient }}
-                <div class="button-container">
-                    <form action="{{ url_for('cancel_friend_request', recipient_login=recipient) }}" method="POST" style="display:inline;">
-                        <button class="cancel-button" type="submit">Отменить</button>
-                    </form>
+                <div class="friends2-info">
+                    {{ recipient }}
+                    <div class="button-container">
+                        <form action="{{ url_for('cancel_friend_request', recipient_login=recipient) }}" method="POST" style="display:inline;">
+                            <button class="cancel-button" type="submit">Отменить</button>
+                        </form>
+                    </div>
                 </div>
             </li>
         {% endfor %}
