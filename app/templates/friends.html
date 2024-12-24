@@ -5,7 +5,29 @@
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/friends.css') }}">
 <div class="friend-list-container">
-    <h2>Ваши друзья</h2>
+
+    <h1>Найти друга</h1>
+    <form action="{{ url_for('search_friend') }}" method="POST">
+        <input type="text" name="friend_login" placeholder="Введите логин друга" required>
+        <button class="add-friend-button" type="submit">Поиск</button>
+    </form>
+
+    {% if search_result %}
+        <h3>Результаты поиска:</h3>
+        <p>Пользователь: {{ search_result.user_login }}</p>
+        {% if search_result.error_message %}
+            <p class="danger">{{ search_result.error_message }}</p>
+        {% elif search_result.is_friend %}
+            <p>Этот пользователь уже в ваших друзьях.</p>
+        {% else %}
+            <form action="{{ url_for('send_friend_request', recipient_login=search_result.user_login) }}" method="POST">
+                <button class="add-button" type="submit">Отправить заявку в друзья</button>
+            </form>
+        {% endif %}
+    {% endif %}
+
+
+    <h1>Ваши друзья</h1>
 
     {% if error %}
         <p class="danger">{{ error }}</p>
@@ -39,26 +61,6 @@
             <li class="friend-item friend-empty">У вас нет друзей.</li>
         {% endif %}
     </ul>
-
-    <h2>Найти друга</h2>
-    <form action="{{ url_for('search_friend') }}" method="POST">
-        <input type="text" name="friend_login" placeholder="Введите логин друга" required>
-        <button class="add-friend-button" type="submit">Поиск</button>
-    </form>
-
-    {% if search_result %}
-        <h3>Результаты поиска:</h3>
-        <p>Пользователь: {{ search_result.user_login }}</p>
-        {% if search_result.error_message %}
-            <p class="danger">{{ search_result.error_message }}</p>
-        {% elif search_result.is_friend %}
-            <p>Этот пользователь уже в ваших друзьях.</p>
-        {% else %}
-            <form action="{{ url_for('send_friend_request', recipient_login=search_result.user_login) }}" method="POST">
-                <button class="add-button" type="submit">Отправить заявку в друзья</button>
-            </form>
-        {% endif %}
-    {% endif %}
 
 </div>
 {% endblock %}
