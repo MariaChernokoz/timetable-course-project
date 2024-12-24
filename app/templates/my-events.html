@@ -23,23 +23,25 @@
         <h2>{{ date.strftime('%Y-%m-%d') }}</h2>
         <div class="task-list-container">
             <ul class="task-list">
-                {% for event_name, start_time, end_time, event_location, category, comment in events %}
+                {% for event in events %}
+                    {# Предполагаем, что event содержит (Event_ID, Event_name, Start_time_and_date, End_time_and_date, LOCATION, Category, COMMENT) #}
                     <li class="task-item">
-                        <div class="task-category {{ category }}">{{ category }}</div> <!-- Категория слева -->
+                        <div class="task-category {{ event[5] }}">{{ event[5] }}</div> <!-- Категория слева -->
                         <div class="task-info">
-                            <span class="task-name">{{ event_name }}</span>
-                            <span class="task-deadline">({{ start_time }} - {{ end_time }}), {{ event_location }}</span>
+                            <span class="task-name">{{ event[1] }}</span>
+                            <span class="task-deadline">({{ event[2].strftime('%H:%M') }} - {{ event[3].strftime('%H:%M') }}), {{ event[4] }}</span>
                         </div>
-                        {% if comment %}
+                        {% if event[6] %}  {# Проверяем существует ли комментарий #}
                             <div class="task-comment" style="margin-left: auto;">
-                                {{ comment }}
+                                {{ event[6] }}
                             </div>
                         {% endif %}
+
+                        <!-- Кнопка удаления вне рамки события -->
+                        <form action="{{ url_for('delete_event', event_id=event[0]) }}" method="POST" style="display:inline;float:right;margin-left: 10px;">
+                            <button type="submit" class="task-button" onclick="return confirm('Вы уверены, что хотите удалить это событие?');">Удалить</button>
+                        </form>
                     </li>
-                    <!-- Кнопка удаления вне рамки события -->
-                    <form action="{{ url_for('delete_event', event_name=event_name) }}" method="POST" style="display:inline;float:right;margin-left: 10px;">
-                        <button type="submit" class="task-button" onclick="return confirm('Вы уверены, что хотите удалить это событие?');">Удалить</button>
-                    </form>
                 {% endfor %}
             </ul>
         </div>

@@ -3,8 +3,9 @@
 {% block title %}Создать новое событие{% endblock %}
 
 {% block content %}
-    <h1>Создать новое событие</h1>
-    <div class="event-form-container" style="border: 1px solid #ccc; padding: 10px; margin: 10px auto; border-radius: 5px; width: 400px; text-align: left;">
+    <h1 class="event-title">Создать новое событие</h1>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/create-event.css') }}">
+    <div class="event-form-container">
         <form method="POST">
             <div>
                 <label for="event_name">Название события:</label>
@@ -28,11 +29,11 @@
 
             <div>
                 <label for="category">Категория:</label>
-                <select id="category" name="category" required>
+                <select id="category" name="category" class="select-dropdown" required>
                     <option value="----------">Без категории</option>
                     <option value="Личное">Личное</option>
                     <option value="Работа">Работа</option>
-                    <option value="Учёба ">Учёба</option>
+                    <option value="Учёба">Учёба</option>
                 </select>
             </div>
 
@@ -42,8 +43,21 @@
             </div>
 
             <div>
-                <button type="submit">Создать событие</button>
+                <button type="submit" class="create-event-button">Создать событие</button>
             </div>
         </form>
     </div>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var now = new Date();
+        var currentDateTime = now.toISOString().slice(0, 16); // Получаем формат 'YYYY-MM-DDTHH:MM'
+        document.getElementById('start_time').setAttribute('min', currentDateTime); // Установка минимального значения
+        document.getElementById('end_time').setAttribute('min', currentDateTime); // Установка минимального значения
+
+        // Установка значения по умолчанию
+        document.getElementById('start_time').value = currentDateTime;
+        document.getElementById('end_time').value = currentDateTime;
+    });
+    </script>
 {% endblock %}

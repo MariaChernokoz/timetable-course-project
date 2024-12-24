@@ -5,7 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, current_user, logout_user
 from app.user import User
 from datetime import datetime
-
+import pytz
 
 
 def connect_to_db():
@@ -91,17 +91,17 @@ def base():
 
 @app.route('/create-event', methods=["GET", "POST"])
 def create_event():
-   # (Оставляем код создания события без изменений)
     if request.method == "POST":
         event_name = request.form.get("event_name")
         start_time = request.form.get("start_time")
         end_time = request.form.get("end_time")
         location = request.form.get("location")
-        category = request.form.get("category")  # Будет получать значение из выпадающего списка
+        category = request.form.get("category")
         comment = request.form.get("comment")
 
         user_login = current_user.user_login
 
+        # Проверка обязательных полей
         if not event_name or not start_time or not end_time:
             flash("Пожалуйста, заполните все обязательные поля.", "error")
             return redirect(url_for("create_event"))
@@ -109,6 +109,15 @@ def create_event():
         try:
             start_time = datetime.strptime(start_time, "%Y-%m-%dT%H:%M")
             end_time = datetime.strptime(end_time, "%Y-%m-%dT%H:%M")
+
+            # Проверка, не находится ли время в прошлом и время окончания больше времени начала
+            if start_time < datetime.now():
+                flash("Время начала не может быть в прошлом.", "error")
+                return redirect(url_for("create_event"))
+            if end_time <= start_time:
+                flash("Время окончания должно быть позже времени начала.", "error")
+                return redirect(url_for("create_event"))
+
         except ValueError:
             flash("Некорректный формат даты и времени.", "error")
             return redirect(url_for("create_event"))
@@ -119,12 +128,13 @@ def create_event():
             cur.execute(
                 """
                 INSERT INTO Events (User_login, Event_name, Start_time_and_date, End_time_and_date, Location, Category, Comment)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING Event_ID
                 """,
                 (user_login, event_name, start_time, end_time, location, category, comment)
             )
+            event_id = cur.fetchone()[0]  # Получение созданного Event_ID
             conn.commit()
-            return redirect(url_for("my_events"))
+            return redirect(url_for("my_events"))  # Перенаправление на страницу со списком событий
         except psycopg.Error as e:
             conn.rollback()
             flash(f"Ошибка базы данных при создании события: {e}", "error")
@@ -134,26 +144,39 @@ def create_event():
 
     return render_template('create-event.html')
 
-
 @app.route('/my-events')
 def my_events():
     conn = connect_to_db()
-    events_by_date = {}  # Используем словарь, где ключ - дата, а значение - список событий
+    events_by_date = {}
     cur = None
+    current_time = datetime.now(pytz.utc)  # Получаем текущее время с часовым поясом UTC
     try:
         cur = conn.cursor()
-        # Получите события для текущего пользователя
-        cur.execute("SELECT Event_name, Start_time_and_date, End_time_and_date, LOCATION, Category, COMMENT FROM Events WHERE User_login = %s ORDER BY Start_time_and_date",
-                    (current_user.user_login,))
-        fetched_events = cur.fetchall()
+        cur.execute("""
+            SELECT Event_ID, Event_name, Start_time_and_date, End_time_and_date, Location, Category, Comment
+            FROM Events WHERE User_login = %s ORDER BY Start_time_and_date
+        """, (current_user.user_login,))
 
+        fetched_events = cur.fetchall()
         for event in fetched_events:
-            event_date = event[1].date()  # Получаем только дату из Start_time_and_date
-            if event_date not in events_by_date:
-                events_by_date[event_date] = []  # Если нет ключа, создаем список
-            events_by_date[event_date].append(
-                (event[0], event[1].strftime('%H:%M'), event[2].strftime('%H:%M'), event[3], event[4], event[5])  # Добавляем event[5] для комментария
-            )
+            event_id, event_name, start_time, end_time, location, category, comment = event
+
+            # Преобразуем end_time в UTC, если он не имеет информации о часовом поясе
+            if end_time.tzinfo is None:
+                end_time = end_time.replace(tzinfo=pytz.utc)  # Устанавливаем UTC, если нет информации о часовом поясе
+
+            # Проверяем, прошел ли уже срок события
+            if end_time < current_time:
+                # Удаляем событие из базы данных, если оно прошло
+                cur.execute("DELETE FROM Events WHERE Event_ID = %s AND User_login = %s",
+                            (event_id, current_user.user_login))
+                conn.commit()  # Подтверждаем изменение
+            else:
+                event_date = start_time.date()  # Получаем только дату из Start_time_and_date
+                if event_date not in events_by_date:
+                    events_by_date[event_date] = []
+                events_by_date[event_date].append(event)  # Добавляем всю запись события
+
     except psycopg.Error as e:
         flash(f"Ошибка базы данных: {e}", "error")
     finally:
@@ -163,24 +186,26 @@ def my_events():
 
     return render_template('my-events.html', active_page='my_events', events_by_date=events_by_date)
 
-@app.route('/events/delete/<event_name>', methods=['POST'])
-def delete_event(event_name):
-    conn = connect_to_db()  # Подключение к базе данных
+@app.route('/events/delete/<int:event_id>', methods=['POST'])
+def delete_event(event_id):
+    conn = connect_to_db()
     if conn:
-        cur = conn.cursor()  # Создание курсора для выполнения запросов
+        cur = conn.cursor()
         try:
-            # Выполнение SQL-запроса для удаления события
-            cur.execute("DELETE FROM Events WHERE User_login = %s AND Event_name = %s",
-                        (current_user.user_login, event_name))
-            conn.commit()  # Подтверждение изменений
-            flash("Событие успешно удалено!", "success")  # Уведомление об успешном удалении
+            cur.execute("DELETE FROM Events WHERE User_login = %s AND Event_ID = %s",
+                        (current_user.user_login, event_id))
+            conn.commit()
+            flash("Событие успешно удалено!", "success")
         except psycopg.Error as e:
-            conn.rollback()  # Откат изменений в случае ошибки
-            flash(f"Ошибка базы данных: {e}", "error")  # Уведомление об ошибке
+            conn.rollback()
+            flash(f"Ошибка базы данных: {e}", "error")
         finally:
-            cur.close()  # Закрытие курсора
-            conn.close()  # Закрытие соединения с базой данных
-    return redirect(url_for('my_events'))  # Перенаправление на страницу со списком событий
+            cur.close()
+            conn.close()
+    return redirect(url_for('my_events'))
+
+
+
 '''
 @app.route('/friends')
 def friends():
@@ -208,11 +233,12 @@ def todos():
                     deadline = None
 
                 cur.execute(
-                    "INSERT INTO Tasks (User_login, Task_name, Creation_date, Deadline, Task_status) VALUES (%s, %s, NOW(), %s, %s)",
+                    "INSERT INTO Tasks (User_login, Task_name, Creation_date, Deadline, Task_status) VALUES (%s, %s, NOW(), %s, %s) RETURNING taskid",
                     (user_login, task_name, deadline, 'Новая')
                 )
+                taskid = cur.fetchone()[0]  # Получаем ID новой задачи
                 conn.commit()
-                #flash("Задача успешно добавлена!", "success")
+                flash("Задача успешно добавлена!", "success")
                 return redirect(url_for('todos'))
             except psycopg.Error as e:
                 conn.rollback()
@@ -226,26 +252,25 @@ def todos():
     conn = connect_to_db()
     if conn:
         cur = conn.cursor()
-        cur.execute("SELECT Task_name, Deadline FROM Tasks WHERE User_login = %s", (current_user.user_login,))
+        cur.execute("SELECT Taskid, Task_name, Deadline FROM Tasks WHERE User_login = %s", (current_user.user_login,))
         fetched_tasks = cur.fetchall()
 
         # Форматируем дату и время перед передачей в шаблон
-        tasks = [(task[0], task[1].strftime('%Y-%m-%d %H:%M') if task[1] else '') for task in fetched_tasks]
+        tasks = [(task[0], task[1], task[2].strftime('%Y-%m-%d %H:%M') if task[2] else '') for task in fetched_tasks]
 
         cur.close()
         conn.close()
 
     return render_template('todos.html', active_page='todos', tasks=tasks)
 
-
-@app.route('/todos/delete/<task_name>', methods=['POST'])
-def delete_task(task_name):
+@app.route('/todos/delete/<int:taskid>', methods=['POST'])
+def delete_task(taskid):
     conn = connect_to_db()
     if conn:
         cur = conn.cursor()
         try:
-            cur.execute("DELETE FROM Tasks WHERE User_login = %s AND Task_name = %s",
-                        (current_user.user_login, task_name))
+            cur.execute("DELETE FROM Tasks WHERE User_login = %s AND Taskid = %s",
+                        (current_user.user_login, taskid))
             conn.commit()
             flash("Задача успешно удалена!", "success")
         except psycopg.Error as e:
@@ -255,6 +280,7 @@ def delete_task(task_name):
             cur.close()
             conn.close()
     return redirect(url_for('todos'))
+
 
 
 @app.route('/shared-events')
