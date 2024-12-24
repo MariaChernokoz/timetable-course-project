@@ -109,6 +109,16 @@ def create_event():
             flash("Пожалуйста, заполните все обязательные поля.", "error")
             return redirect(url_for("create_event"))
 
+        # Проверка форматирования дней недели
+        if days_of_week and not all(day in '1234567' for day in days_of_week):
+            flash("Некорректный формат дней недели. Используйте только цифры от 1 до 7.", "error")
+            return redirect(url_for("create_event"))
+
+        # Проверка длины комментария
+        if comment and len(comment) > 30:
+            flash("Комментарий не должен превышать 30 символов.", "error")
+            return redirect(url_for("create_event"))
+
         try:
             start_time = datetime.strptime(start_time, "%Y-%m-%dT%H:%M")
             end_time = datetime.strptime(end_time, "%Y-%m-%dT%H:%M")
@@ -130,16 +140,8 @@ def create_event():
         conn = connect_to_db()
         try:
             cur = conn.cursor()
-            cur.execute(
-                """
-                INSERT INTO Events (User_login, Event_name, Start_time_and_date, End_time_and_date, Location, Category, Comment)
-                VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING Event_ID
-                """,
-                (user_login, event_name, start_time, end_time, location, category, comment)
-            )
-            event_id = cur.fetchone()[0]  # Получение созданного Event_ID
 
-            # Если событие регулярное, добавляем его в таблицу Regularity
+            # Если событие регулярное, сначала создаем регулярность.
             if is_regular:
                 cur.execute(
                     """
@@ -150,29 +152,57 @@ def create_event():
                 )
                 regularity_id = cur.fetchone()[0]  # Получение созданного Regularity_ID
 
-                # Создаем экземпляры события с привязкой к Regularity_ID
+                # Создание основного события с привязкой к Regularity_ID
+                cur.execute(
+                    """
+                    INSERT INTO Events (User_login, Event_name, Start_time_and_date, End_time_and_date, Location, Category, Comment, Regularity_ID)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING Event_ID
+                    """,
+                    (user_login, event_name, start_time, end_time, location, category, comment, regularity_id)
+                )
+            else:
+                # Если событие не регулярное, просто создаем его
+                cur.execute(
+                    """
+                    INSERT INTO Events (User_login, Event_name, Start_time_and_date, End_time_and_date, Location, Category, Comment)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING Event_ID
+                    """,
+                    (user_login, event_name, start_time, end_time, location, category, comment)
+                )
+
+            event_id = cur.fetchone()[0]  # Получение созданного Event_ID
+
+            # Если событие регулярное, создаем его экземпляры
+            if is_regular:
                 current_event_start_time = start_time
+                current_event_end_time = end_time
                 current_event_start_time += timedelta(weeks=int(regularity_interval))
+                current_event_end_time += timedelta(weeks=int(regularity_interval))
                 while current_event_start_time <= end_repeat:
                     cur.execute(
                         """
                         INSERT INTO Events (User_login, Event_name, Start_time_and_date, End_time_and_date, Location, Category, Comment, Regularity_ID)
                         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                         """,
-                        (user_login, event_name, current_event_start_time, end_time, location, category, comment, regularity_id)
+                        (user_login, event_name, current_event_start_time, current_event_end_time, location, category, comment,
+                         regularity_id)
                     )
                     current_event_start_time += timedelta(weeks=int(regularity_interval))  # Увеличиваем на интервал
+                    current_event_end_time += timedelta(weeks=int(regularity_interval))
 
             conn.commit()
-            return redirect(url_for("my_events"))  # Перенаправление на страницу со списком событий
+            return redirect(url_for("my_events"))
+
         except psycopg.Error as e:
             conn.rollback()
             flash(f"Ошибка базы данных при создании события: {e}", "error")
+            return redirect(url_for("my_events"))  # Перенаправление на страницу со списком событий
+
         finally:
             cur.close()
             conn.close()
 
-    return render_template('create-event.html')
+    return render_template('create-event.html', active_page='my_events')
 
 @app.route('/my-events')
 def my_events():
@@ -229,7 +259,7 @@ def delete_event(event_id):
 
             if regularity_id:
                 regularity_id = regularity_id[0]
-                delete_option = request.form.get(f'delete_option-{event_id}')  # Исправлено на правильное имя
+                delete_option = request.form.get('delete_option')
 
                 if delete_option == 'all':
                     cur.execute("DELETE FROM Events WHERE Regularity_ID = %s", (regularity_id,))
@@ -254,7 +284,6 @@ def delete_event(event_id):
             conn.close()
 
     return redirect(url_for('my_events'))
-
 
 @app.route('/todos', methods=['GET', 'POST'])
 def todos():
