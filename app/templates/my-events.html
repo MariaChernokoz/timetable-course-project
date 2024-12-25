@@ -21,6 +21,7 @@
 
 <a href="{{ url_for('create_event') }}" class="add-task-button">Создать новое событие</a>
 
+
 {% if events_by_date %}
     {% for date, events in events_by_date.items() %}
         <h2>{{ date.strftime('%Y-%m-%d') }}</h2>
@@ -78,6 +79,40 @@
     {% endfor %}
 {% else %}
     <p class="task-empty">Нет событий.</p>
+{% endif %}
+
+<h1>Мои совместные события</h1>
+{% if shared_events_by_date %}
+    {% for date, events in shared_events_by_date.items() %}
+        <h2>{{ date.strftime('%Y-%m-%d') }}</h2>
+        <div class="task-list-container">
+            <ul class="task-list">
+                {% for event in events %}
+                    <li class="task-item">
+                        <div class="task-category {{ event.category }}">{{ event.category }}</div>
+                        <div class="task-info">
+                            <span class="task-name">{{ event.name }}</span>
+                            <span class="task-deadline">({{ event.time }})</span>
+                        </div>
+
+                        <div class="task-details">
+                            <div class="task-location">
+                                {{ event.location }}
+                            </div>
+                            <div class="separator"></div>
+                            {% if event.comment %}
+                                <div class="task-comment">
+                                    {{ event.comment }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endfor %}
+{% else %}
+    <p>У вас нет совместных событий.</p>
 {% endif %}
 
 <script>

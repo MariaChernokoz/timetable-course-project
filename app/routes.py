@@ -154,6 +154,7 @@ def create_event():
         try:
             cur = conn.cursor()
 
+            regularity_id = None  # Инициализация переменной
             # Если событие регулярное, сначала создаем регулярность.
             if is_regular:
                 # Проверка: не раньше ли дата и время конца события
@@ -203,8 +204,7 @@ def create_event():
                         INSERT INTO Events (User_login, Event_name, Start_time_and_date, End_time_and_date, Location, Category, Comment, Regularity_ID)
                         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                         """,
-                        (user_login, event_name, current_event_start_time, current_event_end_time, location, category, comment,
-                         regularity_id)
+                        (user_login, event_name, current_event_start_time, current_event_end_time, location, category, comment, regularity_id)
                     )
                     current_event_start_time += timedelta(weeks=int(regularity_interval))  # Увеличиваем на интервал
                     current_event_end_time += timedelta(weeks=int(regularity_interval))
@@ -227,10 +227,13 @@ def create_event():
 def my_events():
     conn = connect_to_db()
     events_by_date = {}
+    shared_events_by_date = {}
     cur = None
     current_time = datetime.now(pytz.utc)  # Получаем текущее время с часовым поясом UTC
     try:
         cur = conn.cursor()
+
+        # Получение событий пользователя
         cur.execute("""
             SELECT Event_ID, Event_name, Start_time_and_date, End_time_and_date, Location, Category, Comment
             FROM Events WHERE User_login = %s ORDER BY Start_time_and_date
@@ -274,6 +277,44 @@ def my_events():
                     events_by_date[event_date] = []
                 events_by_date[event_date].append(event_entry)  # Добавляем запись события
 
+
+            # Получение совместных событий
+            cur.execute("""
+                SELECT se.Shared_event_name, se.Start_time_and_date, se.End_time_and_date, 
+                       se.Location, se.Category, se.Comment
+                FROM SharedEvents AS se
+                INNER JOIN JointSharedEventParticipation AS jp ON se.Shared_event_ID = jp.Shared_event_ID
+                WHERE jp.User_login = %s
+                ORDER BY se.Start_time_and_date
+            """, (current_user.user_login,))
+
+            fetched_shared_events = cur.fetchall()
+
+            for event in fetched_shared_events:
+                event_name, start_time, end_time, location, category, comment = event
+
+                # Форматируем даты и время для совместных событий
+                if start_time.date() != end_time.date():
+                    display_time = f"{start_time.strftime('%Y-%m-%d')} {start_time.strftime('%H:%M')} - " \
+                                   f"{end_time.strftime('%Y-%m-%d')} {end_time.strftime('%H:%M')}"
+                else:
+                    display_time = f"{start_time.strftime('%H:%M')} - {end_time.strftime('%H:%M')}"
+
+                shared_event_entry = {
+                    "name": event_name,
+                    "time": display_time,
+                    "location": location,
+                    "category": category,
+                    "comment": comment
+                }
+
+                event_date = start_time.date()  # Получаем только дату
+                if event_date not in shared_events_by_date:
+                    shared_events_by_date[event_date] = []
+                # Пример проверки на существование записи
+                if shared_event_entry not in shared_events_by_date[event_date]:
+                    shared_events_by_date[event_date].append(shared_event_entry)
+
     except psycopg.Error as e:
         flash(f"Ошибка базы данных", "error")
     finally:
@@ -281,7 +322,7 @@ def my_events():
             cur.close()
         conn.close()
 
-    return render_template('my-events.html', active_page='my_events', events_by_date=events_by_date)
+    return render_template('my-events.html', active_page='my_events', events_by_date=events_by_date, shared_events_by_date=shared_events_by_date)
 
 @app.route('/events/delete/<int:event_id>', methods=['POST'])
 def delete_event(event_id):
@@ -821,9 +862,17 @@ def request_shared_event(recipient_login):
         #_______ДОБАВЛЕНИЕ ДАННЫХ В БД_______
         try:
             cur = conn.cursor()
+            regularity_id = None  # Инициализация переменной
 
             # Если событие регулярное, сначала создаем регулярность.
             if is_regular:
+
+                # Проверка: не раньше ли дата и время конца события
+                if end_repeat < end_time:
+                    # Если условия не соблюдены, обрабатываем ошибку.
+                    flash("Конец повторений должна быть позже времени окончания события.", "error")
+                    return redirect(url_for("create_event"))
+
                 cur.execute(
                     """
                     INSERT INTO Regularity (Regularity_interval, Days_of_week, End_date)
@@ -865,18 +914,18 @@ def request_shared_event(recipient_login):
                             INSERT INTO JointSharedEventRequests (Senders_login, Recipient_login, Shared_event_name, Start_time_and_date, End_time_and_date, Regularity_ID, Location, Category, Comment, request_status)
                             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING request_id;
                             """,
-                        (current_user.user_login, recipient_login, event_name, start_time, end_time, regularity_id, location, category, comment, request_status)
+                        (current_user.user_login, recipient_login, event_name, current_event_start_time, current_event_end_time, regularity_id, location, category, comment, request_status)
                     )
                     current_event_start_time += timedelta(weeks=int(regularity_interval))  # Увеличиваем на интервал
                     current_event_end_time += timedelta(weeks=int(regularity_interval))
 
             conn.commit()
-            return redirect(url_for("my_events"))
+            return redirect(url_for("shared_events"))
 
         except psycopg.Error as e:
             conn.rollback()
             flash(f"Ошибка базы данных при создании события: {e}", "error")
-            return redirect(url_for("my_events"))  # Перенаправление на страницу со списком событий
+            return redirect(url_for("friends"))  # Перенаправление на страницу со списком событий
 
         finally:
             cur.close()
@@ -918,19 +967,21 @@ def shared_events():
 
             # Получаем заявки, отправленные текущим пользователем
             cur.execute(
-                "SELECT recipient_login, Shared_event_name, Start_time_and_date, End_time_and_date, LOCATION, comment FROM JointSharedEventRequests WHERE senders_login = %s AND request_status = 'pending'",
+                "SELECT request_id, senders_login, recipient_login, Shared_event_name, Start_time_and_date, End_time_and_date, LOCATION, comment FROM JointSharedEventRequests WHERE senders_login = %s AND request_status = 'pending'",
                 (current_user.user_login,))
             sent_requests = cur.fetchall()
 
             # Обрабатываем отправленные заявки
             for row in sent_requests:
                 shared_events_requests_sent.append({
-                    'recipient_login': row[0],
-                    'event_name': row[1],
-                    'start_time': row[2],
-                    'end_time': row[3],
-                    'location': row[4],
-                    'comment': row[5]
+                    'request_id': row[0],
+                    'senders_login': row[1],
+                    'recipient_login': row[2],
+                    'event_name': row[3],
+                    'start_time': row[4],
+                    'end_time': row[5],
+                    'location': row[6],
+                    'comment': row[7]
                 })
 
             cur.close()
@@ -986,9 +1037,12 @@ def accept_share_event_request(request_id):
                     INSERT INTO SharedEvents 
                     (Shared_event_name, Start_time_and_date, End_time_and_date, LOCATION, Category, COMMENT, Regularity_ID) 
                     VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    RETURNING shared_event_id
                     """,
                     (shared_event_name, start_time, end_time, location, category, comment, regularity_id)
                 )
+
+                conn.commit()
 
                 # Получаем ID созданного события
                 shared_event_id = cur.fetchone()[0]
@@ -998,6 +1052,14 @@ def accept_share_event_request(request_id):
                     "INSERT INTO JointSharedEventParticipation (Shared_event_ID, User_login) VALUES (%s, %s)",
                     (shared_event_id, current_user.user_login)
                 )
+
+                # Добавляем второго участника события (отправителя запроса)
+                cur.execute(
+                    "INSERT INTO JointSharedEventParticipation (Shared_event_ID, User_login) VALUES (%s, %s)",
+                    (shared_event_id, senders_login)  # Добавляем отправителя запроса как участника
+                )
+
+                conn.commit()
 
                 # Обновляем статус заявки на 'accepted'
                 cur.execute(
@@ -1033,24 +1095,46 @@ def decline_share_event_request(request_id):
         cur = conn.cursor()
 
         try:
-            # Получаем информацию о запросе
-            cur.execute("SELECT senders_login FROM JointSharedEventRequests WHERE request_id = %s", (request_id,))
-            sender_info = cur.fetchone()
-
-            if sender_info:
-                sender_login = sender_info[0]
-
-                # Обновляем статус заявки на 'declined'
-                cur.execute("UPDATE JointSharedEventRequests SET request_status = 'declined' WHERE request_id = %s", (request_id,))
-                conn.commit()
-
-                flash(f"Вы отклонили запрос на совместное событие от {sender_login}.", "success")
-            else:
-                flash("Заявка не найдена.", "error")
-
+            # Удаляем заявку из JointSharedEventRequests
+            cur.execute("DELETE FROM JointSharedEventRequests WHERE request_id = %s", (request_id,))
+            conn.commit()
+            flash("Заявка была отклонена.", "success")
         except Exception as e:
-            flash(f"Произошла ошибка: {e}", "error")
-            conn.rollback()  # Откат изменений в случае ошибки
+            flash(f"Произошла ошибка при отклонении заявки: {e}", "error")
+            conn.rollback()  # В случае ошибки откатить изменения
+        finally:
+            cur.close()
+            conn.close()
+
+    else:
+        flash("Ошибка подключения к базе данных", "danger")
+
+    return redirect(url_for('shared_events'))  # Перенаправляем на страницу совместных событий
+
+@app.route('/cancel_share_event_request/<int:request_id>', methods=['POST'])
+def cancel_share_event_request(request_id):
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+
+    conn = connect_to_db()
+
+    if conn:
+        cur = conn.cursor()
+
+        try:
+            # Удаляем заявку из JointSharedEventRequests
+            cur.execute("DELETE FROM JointSharedEventRequests WHERE request_id = %s AND senders_login = %s",
+                        (request_id, current_user.user_login))
+            if cur.rowcount > 0:
+                # Если удаление прошло успешно
+                conn.commit()
+                flash("Запрос на совместное событие был отменен.", "info")
+            else:
+                # Если не найдено ни одной записи для удаления (например, неверный request_id или не тот отправитель)
+                flash("Не удалось отменить запрос. Возможно, он уже был отменен.", "warning")
+        except Exception as e:
+            flash(f"Произошла ошибка при отмене заявки: {e}", "error")
+            conn.rollback()  # В случае ошибки откатить изменения
         finally:
             cur.close()
             conn.close()

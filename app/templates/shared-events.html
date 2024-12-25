@@ -34,64 +34,91 @@ window.onclick = function(event) {
     }
 }
 </script>
-
-
 <link rel="stylesheet" href="{{ url_for('static', filename='css/friends.css') }}">
-
 
 <div class="friend-list-container">
     <h1>Запросы на совместные события</h1>
-    <ul class="friend-list">
-        {% for request in shared_events_requests_received %}
-            <li class="friend-item">
-                <div class="friends2-info">
-                    <span>{{ request.event_name }}</span> <!-- Здесь выводится название события -->
-                    <div class="details">
-                        <p>Начало: {{ request.start_time }}</p>
-                        <p>Конец: {{ request.end_time }}</p>
-                        <p>Место: {{ request.location }}</p>
-                        <p>Комментарий: {{ request.comment }}</p>
-                    </div>
-                    <div class="button-container">
-                        <form action="{{ url_for('accept_share_event_request', request_id=request.request_id) }}" method="POST" style="display:inline;">
-                            <button class="accept-button" type="submit">Принять</button>
-                        </form>
-                        <form action="{{ url_for('decline_share_event_request', request_id=request.request_id) }}" method="POST" style="display:inline;">
-                            <button class="decline-button" type="submit">Отклонить</button>
-                        </form>
-                    </div>
-                </div>
-            </li>
-        {% endfor %}
-        {% if shared_events_requests_received|length == 0 %}
-            <li class="friend-item friend-empty">У вас нет запросов на совместные события.</li>
-        {% endif %}
-    </ul>
 
-    <h2>Вы отправили запросы на совместные события:</h2>
-    <ul class="friend-list">
-        {% for event in shared_events_requests_sent %}
-            <li class="friend-item">
-                <div class="friends2-info">
-                    <span>{{ event.event_name }}</span> <!-- Здесь выводится название события -->
-                    <div class="details">
-                        <p>Начало: {{ event.start_time }}</p>
-                        <p>Конец: {{ event.end_time }}</p>
-                        <p>Место: {{ event.location }}</p>
-                        <p>Комментарий: {{ event.comment }}</p>
-                    </div>
-                    <div class="button-container">
-                        <form action="{{ url_for('cancel_friend_request', recipient_login=event.recipient_login) }}" method="POST" style="display:inline;">
-                            <button class="cancel-button" type="submit">Отменить</button>
-                        </form>
-                    </div>
-                </div>
-            </li>
-        {% endfor %}
-        {% if shared_events_requests_sent|length == 0 %}
-            <li class="friend-item friend-empty">Вы не отправили запросов на совместные события.</li>
-        {% endif %}
-    </ul>
+    <!-- Запросы, полученные от других пользователей -->
+    {% if shared_events_requests_received|length > 0 %}
+        <h2>Полученные запросы</h2>
+        <div class="task-list-container">
+            <ul class="task-list">
+                {% for request in shared_events_requests_received %}
+                    <li class="task-item">
+                        <div class="task-info">
+                            <span class="task-name">{{ request.event_name }}</span>
+                            <span class="task-date">({{ request.start_time.strftime('%Y-%m-%d %H:%M') }} - {{ request.end_time.strftime('%Y-%m-%d %H:%M') }})</span>
+                        </div>
+
+                        <div class="task-details">
+                            <div class="task-location">
+                                <strong>Место:</strong> {{ request.location }}
+                            </div>
+                            <div class="task-comment">
+                                {% if request.comment %}
+                                    <strong>Комментарий:</strong> {{ request.comment }}
+                                {% endif %}
+                            </div>
+                            <div class="task-sender">
+                                <strong>Отправитель:</strong> {{ request.senders_login }}
+                            </div>
+                        </div>
+
+                        <div class="button-container">
+                            <form action="{{ url_for('accept_share_event_request', request_id=request.request_id) }}" method="POST" style="display:inline;">
+                                <button class="accept-button" type="submit">Принять</button>
+                            </form>
+                            <form action="{{ url_for('decline_share_event_request', request_id=request.request_id) }}" method="POST" style="display:inline;">
+                                <button class="accept-button" type="submit">Отклонить</button>
+                            </form>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% else %}
+        <div class="friend-item friend-empty">У вас нет запросов на совместные события.</div>
+    {% endif %}
+
+    <!-- Запросы, отправленные вами -->
+    <h2>Отправленные запросы</h2>
+    {% if shared_events_requests_sent|length > 0 %}
+        <div class="task-list-container">
+            <ul class="task-list">
+                {% for request in shared_events_requests_sent %}
+                    <li class="task-item">
+                        <div class="task-info">
+                            <span class="task-name">{{ request.event_name }}</span>
+                            <span class="task-date">({{ request.start_time.strftime('%Y-%m-%d %H:%M') }} - {{ request.end_time.strftime('%Y-%m-%d %H:%M') }})</span>
+                        </div>
+
+                        <div class="task-details">
+                            <div class="task-location">
+                                <strong>Место:</strong> {{ request.location }}
+                            </div>
+                            <div class="task-comment">
+                                {% if request.comment %}
+                                    <strong>Комментарий:</strong> {{ request.comment }}
+                                {% endif %}
+                            </div>
+                            <div class="task-receiver">
+                                <strong>Получатель:</strong> {{ request.recipient_login }}
+                            </div>
+                        </div>
+
+                        <div class="button-container">
+                            <form action="{{ url_for('cancel_share_event_request', request_id=request.request_id) }}" method="POST" style="display:inline;">
+                                <button class="cancel-button" type="submit">Отменить</button>
+                            </form>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% else %}
+        <div class="friend-item friend-empty">Вы не отправили запросов на совместные события.</div>
+    {% endif %}
 </div>
 
 </div>
