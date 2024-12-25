@@ -154,3 +154,41 @@
     color: #721c24;
 }
 
+.flash-messages {
+    position: fixed; /* Зафиксировано в верхней части страницы */
+    top: 30px; /* Отступ сверху */
+    right: 10px; /* Отступ справа */
+    z-index: 1000; /* Обеспечьте, чтобы уведомления всегда были на переднем плане */
+}
+
+.danger {
+    color: #ff0000;       /* Красный цвет для ошибок */
+}
+
+.alert {
+    padding: 15px;
+    margin-top: 50px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    color: white;
+    background-color: #333333; /* Серый цвет по умолчанию */
+}
+
+.alert.error {
+    background-color: #800000; /* Красный для ошибок */
+}
+
+.alert.success {
+    background-color: #4CAF50; /* Зеленый для успешных сообщений */
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 16px;
+    float: right;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 15px;
+}
