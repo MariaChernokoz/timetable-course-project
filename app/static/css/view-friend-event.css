@@ -29,20 +29,44 @@
     color: #777;
 }
 
+
+.button-container {
+    display: flex;                 /* Используем Flexbox для выравнивания */
+    justify-content: space-between; /* Равномерное распределение пространства между кнопками */
+    padding: 10px;                /* Опционально: отступ внутри контейнера */
+}
+
 .back-button {
+    /* Дополнительные стили для кнопки "Вернуться к списку друзей" */
     background-color: #404040; /* Цвет фона */
-    color: #fff; /* Цвет текста */
-    border: none; /* Без рамки */
-    padding: 10px 20px; /* Отступы */
-    border-radius: 10px; /* Закругленные углы */
-    cursor: pointer; /* Указатель при наведении */
-    text-align: center; /* Центрирование текста */
-    text-decoration: none; /* Убираем подчеркивание */
-    display: inline-block; /* Блочный элемент для центрирования */
+    color: #fff;               /* Цвет текста */
+    border: none;              /* Без рамки */
+    padding: 10px 20px;       /* Отступы */
+    border-radius: 10px;      /* Закругленные углы */
+    cursor: pointer;           /* Указатель при наведении */
+    text-align: center;        /* Центрирование текста */
+    text-decoration: none;     /* Убираем подчеркивание */
+    transition: background-color 0.3s; /* Плавный переход цвета фона */
+}
+
+.ss-button {
+    /* Стили для кнопки "Создать событие" */
+    background-color: #404040; /* Цвет фона */
+    color: #fff;               /* Цвет текста */
+    border: none;              /* Без рамки */
+    padding: 10px 20px;       /* Отступы */
+    border-radius: 10px;      /* Закругленные углы */
+    cursor: pointer;           /* Указатель при наведении */
+    text-align: center;        /* Центрирование текста */
+    text-decoration: none;     /* Убираем подчеркивание */
     transition: background-color 0.3s; /* Плавный переход цвета фона */
 }
 
 .back-button:hover {
+    background-color: #606060; /* Цвет фона при наведении */
+}
+
+.ss-button:hover {
     background-color: #606060; /* Цвет фона при наведении */
 }
 

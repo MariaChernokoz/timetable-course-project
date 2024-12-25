@@ -14,7 +14,7 @@
                 <li class="nav-item"><a href="{{ url_for('friends') }}" class="nav-link {% if active_page == 'friends' %} active {% endif %}">Друзья</a></li>
                 <li class="nav-item"><a href="{{ url_for('friendsrequests') }}" class="nav-link {% if active_page == 'friendsrequests' %} active {% endif %}">Заявки в друзья</a></li>
                 <li class="nav-item"><a href="{{ url_for('todos') }}" class="nav-link {% if active_page == 'todos' %} active {% endif %}">Список дел</a></li>
-                <li class="nav-item"><a href="{{ url_for('shared_events') }}" class="nav-link {% if active_page == 'shared_events' %} active {% endif %}">Совместные события</a></li>
+                <li class="nav-item"><a href="{{ url_for('shared_events') }}" class="nav-link {% if active_page == 'shared_events' %} active {% endif %}">Запросы на совместные события</a></li>
             </ul>
             {% if current_user.is_authenticated %}
                 <div class="user-info">

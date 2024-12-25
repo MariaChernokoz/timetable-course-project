@@ -3,8 +3,7 @@
 {% block title %}Совместные события{% endblock %}
 
 {% block content %}
-<h1>Совместные события</h1>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/events.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/shared-events.css') }}">
 
 {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
@@ -18,60 +17,6 @@
     </div>
     {% endif %}
 {% endwith %}
-
-<a href="{{ url_for('create_shared_event') }}" class="add-task-button">Создать новое совместное событие</a>
-
-{% if events_by_date %}
-    {% for date, events in events_by_date.items() %}
-        <h2>{{ date.strftime('%Y-%m-%d') }}</h2>
-        <div class="task-list-container">
-            <ul class="task-list">
-                {% for event in events %}
-                <li class="task-item">
-                    <div class="task-category {{ event['category'] }}">{{ event['category'] }}</div>
-                    <div class="task-info">
-                        <span class="task-name">{{ event['name'] }}</span>
-                        <span class="task-deadline">({{ event['time'] }}), {{ event['location'] }}</span>
-                    </div>
-                    {% if event['comment'] %}
-                    <div class="task-comment" style="margin-left: auto;">
-                        {{ event['comment'] }}
-                    </div>
-                    {% endif %}
-
-                    <!-- Кнопка для открытия модального окна -->
-                    <button onclick="openModal({{ event['id'] }})" class="task-button">Удалить</button>
-
-                    <!-- Модальное окно -->
-                    <div id="modal{{ event['id'] }}" class="modal">
-                        <div class="modal-content">
-                            <div class="modal-header">Подтверждение удаления</div>
-                            <div class="modal-body">
-                                <form action="{{ url_for('delete_event', event_id=event['id']) }}" method="POST">
-                                    <label>
-                                        <input type="radio" name="delete_option" value="single" checked> Удалить это событие
-                                    </label><br>
-                                    {% if event['regularity_id'] is not none %}  <!-- event['regularity_id'] хранит аналогичный ID для повторяющихся событий -->
-                                    <label>
-                                        <input type="radio" name="delete_option" value="all"> Удалить все повторяющиеся события
-                                    </label><br>
-                                    {% endif %}
-                                    <div class="modal-buttons">
-                                        <button type="button" class="modal-close" onclick="closeModal({{ event['id'] }})">Отмена</button>
-                                        <button type="submit" class="modal-submit">Подтвердить удаление</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
-    {% endfor %}
-{% else %}
-    <p class="task-empty">Нет совместных событий.</p>
-{% endif %}
 
 <script>
 function openModal(eventId) {
@@ -89,5 +34,67 @@ window.onclick = function(event) {
     }
 }
 </script>
+
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/friends.css') }}">
+
+
+<div class="friend-list-container">
+    <h1>Запросы на совместные события</h1>
+    <ul class="friend-list">
+        {% for request in shared_events_requests_received %}
+            <li class="friend-item">
+                <div class="friends2-info">
+                    <span>{{ request.event_name }}</span> <!-- Здесь выводится название события -->
+                    <div class="details">
+                        <p>Начало: {{ request.start_time }}</p>
+                        <p>Конец: {{ request.end_time }}</p>
+                        <p>Место: {{ request.location }}</p>
+                        <p>Комментарий: {{ request.comment }}</p>
+                    </div>
+                    <div class="button-container">
+                        <form action="{{ url_for('accept_share_event_request', request_id=request.request_id) }}" method="POST" style="display:inline;">
+                            <button class="accept-button" type="submit">Принять</button>
+                        </form>
+                        <form action="{{ url_for('decline_share_event_request', request_id=request.request_id) }}" method="POST" style="display:inline;">
+                            <button class="decline-button" type="submit">Отклонить</button>
+                        </form>
+                    </div>
+                </div>
+            </li>
+        {% endfor %}
+        {% if shared_events_requests_received|length == 0 %}
+            <li class="friend-item friend-empty">У вас нет запросов на совместные события.</li>
+        {% endif %}
+    </ul>
+
+    <h2>Вы отправили запросы на совместные события:</h2>
+    <ul class="friend-list">
+        {% for event in shared_events_requests_sent %}
+            <li class="friend-item">
+                <div class="friends2-info">
+                    <span>{{ event.event_name }}</span> <!-- Здесь выводится название события -->
+                    <div class="details">
+                        <p>Начало: {{ event.start_time }}</p>
+                        <p>Конец: {{ event.end_time }}</p>
+                        <p>Место: {{ event.location }}</p>
+                        <p>Комментарий: {{ event.comment }}</p>
+                    </div>
+                    <div class="button-container">
+                        <form action="{{ url_for('cancel_friend_request', recipient_login=event.recipient_login) }}" method="POST" style="display:inline;">
+                            <button class="cancel-button" type="submit">Отменить</button>
+                        </form>
+                    </div>
+                </div>
+            </li>
+        {% endfor %}
+        {% if shared_events_requests_sent|length == 0 %}
+            <li class="friend-item friend-empty">Вы не отправили запросов на совместные события.</li>
+        {% endif %}
+    </ul>
+</div>
+
+</div>
+
 
 {% endblock %}

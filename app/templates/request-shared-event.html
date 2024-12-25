@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Создать новое событие{% endblock %}
+
+{% block content %}
+    <h1 class="event-title">Создать новое совместное событие</h1>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/shared-events.css') }}">
+    <div class="event-form-container">
+        <form method="POST">
+            <div>
+                <label for="event_name">Название совместного события:</label>
+                <input type="text" id="event_name" name="event_name" required>
+            </div>
+
+            <div>
+                <label for="start_time">Начало:</label>
+                <input type="datetime-local" id="start_time" name="start_time" required>
+            </div>
+
+            <div>
+                <label for="end_time">Конец:</label>
+                <input type="datetime-local" id="end_time" name="end_time" required>
+            </div>
+
+            <div>
+                <label for="location">Место:</label>
+                <input type="text" id="location" name="location">
+            </div>
+
+            <div>
+                <label for="comment">Комментарий:</label>
+                <textarea id="comment" name="comment"></textarea>
+            </div>
+
+            <div>
+                <label>
+                    <input type="checkbox" id="is_regular" name="is_regular" value="1"> Регулярное совместное событие
+                </label>
+            </div>
+
+            <!-- ____регулятрноооооость______ -->
+            <div id="regularity_settings" style="display: none;">
+                <div>
+                    <label for="regularity_interval">Интервал (в неделях):</label>
+                    <input type="number" id="regularity_interval" name="regularity_interval" min="1" max="52">
+                </div>
+
+                <div>
+                    <label for="days_of_week">Дни недели (например, 135 для Пн, Ср, Пт):</label>
+                    <input type="text" id="days_of_week" name="days_of_week" maxlength="7">
+                </div>
+
+                <div>
+                    <label for="end_repeat">Конец повторений:</label>
+                    <input type="datetime-local" id="end_repeat" name="end_repeat">
+                </div>
+            </div>
+            <!-- ____регулятрноооооость______ -->
+
+            <div>
+                <button type="submit" class="create-event-button">Отправить запрос на совместное событие</button>
+            </div>
+        </form>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+       {% if messages %}
+           <div class="flash-messages">
+               {% for category, message in messages %}
+                   <div class="alert alert-{{ category }}">
+                       {{ message }}
+                       <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+                   </div>
+               {% endfor %}
+           </div>
+       {% endif %}
+    {% endwith %}
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var now = new Date();
+            var currentDateTime = now.toISOString().slice(0, 16);
+            document.getElementById('start_time').setAttribute('min', currentDateTime);
+            document.getElementById('end_time').setAttribute('min', currentDateTime);
+            document.getElementById('start_time').value = currentDateTime;
+            document.getElementById('end_time').value = currentDateTime;
+
+            var isRegularCheckbox = document.getElementById('is_regular');
+            var regularitySettings = document.getElementById('regularity_settings');
+
+            isRegularCheckbox.addEventListener('change', function() {
+                if (isRegularCheckbox.checked) {
+                    regularitySettings.style.display = 'block';
+                } else {
+                    regularitySettings.style.display = 'none';
+                }
+            });
+        });
+    </script>
+{% endblock %}

@@ -16,8 +16,13 @@
     {% endif %}
 {% endwith %}
 
-<!-- Кнопка "Вернуться к списку друзей" -->
-<a href="{{ url_for('friends') }}" class="back-button">Вернуться к списку друзей</a>
+<div class="button-container">
+    <!-- Кнопка "Вернуться к списку друзей" -->
+    <a href="{{ url_for('friends') }}" class="back-button">Вернуться к списку друзей</a>
+
+    <!-- Кнопка "Создать совместное событие с выбранным другом" -->
+    <a href="{{ url_for('request_shared_event', recipient_login=friend_name) }}" class="ss-button">Создать совместное событие</a>
+</div>
 
 <!-- ____вывод списка событий друга______ -->
 {% if events_by_date %}

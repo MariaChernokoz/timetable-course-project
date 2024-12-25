@@ -739,80 +739,19 @@ def view_friend_events(friend_username):
 
     return render_template('view-friend-events.html', active_page='friends', events_by_date=events_by_date, friend_name=friend_username)
 
-@app.route('/shared-events')
-def shared_events():
-    conn = connect_to_db()
-    events_by_date = {}
-    cur = None
-    current_time = datetime.now(pytz.utc)  # Получаем текущее время с часовым поясом UTC
-    try:
-        cur = conn.cursor()
-        cur.execute("""
-            SELECT se.Event_ID, se.Event_name, se.Start_time_and_date, se.End_time_and_date, 
-                   se.LOCATION, se.Category, se.COMMENT
-            FROM SharedEvents se
-            JOIN JointSharedEventParticipation jsep ON se.Event_ID = jsep.Event_ID
-            WHERE jsep.User_login = %s
-            ORDER BY se.Start_time_and_date
-        """, (current_user.user_login,))
-
-        fetched_events = cur.fetchall()
-        for event in fetched_events:
-            event_id, event_name, start_time, end_time, location, category, comment = event
-
-            # Преобразуем end_time в UTC, если он не имеет информации о часовом поясе
-            if end_time.tzinfo is None:
-                end_time = end_time.replace(tzinfo=pytz.utc)
-
-            # Проверяем, прошел ли уже срок события
-            if end_time < current_time:
-                # Удаляем событие из базы данных, если оно прошло
-                cur.execute("DELETE FROM SharedEvents WHERE Event_ID = %s",
-                            (event_id,))
-                conn.commit()
-            else:
-                # Форматируем даты и время
-                if start_time.date() != end_time.date():
-                    # Если события начинаются и заканчиваются в разные дни
-                    display_time = f"{start_time.strftime('%Y-%m-%d')} {start_time.strftime('%H:%M')} - " \
-                                   f"{end_time.strftime('%Y-%m-%d')} {end_time.strftime('%H:%M')}"
-                else:
-                    # Если события начинаются и заканчиваются в один день
-                    display_time = f"{start_time.strftime('%H:%M')} - {end_time.strftime('%H:%M')}"
-
-                event_entry = {
-                    "id": event_id,
-                    "name": event_name,
-                    "time": display_time,
-                    "location": location,
-                    "category": category,
-                    "comment": comment
-                }
-
-                event_date = start_time.date()  # Получаем только дату из Start_time_and_date
-                if event_date not in events_by_date:
-                    events_by_date[event_date] = []
-                events_by_date[event_date].append(event_entry)  # Добавляем запись события
-
-    except psycopg.Error as e:
-        flash(f"Ошибка базы данных: {e}", "error")
-    finally:
-        if cur:
-            cur.close()
-        conn.close()
-
-    return render_template('shared-events.html', active_page='shared_events', events_by_date=events_by_date)
-
-
-@app.route('/create-shared-event', methods=["GET", "POST"])
-def create_shared_event():
+@app.route('/request-shared-event/<recipient_login>', methods=["GET", "POST"])
+def request_shared_event(recipient_login):
     if request.method == "POST":
         event_name = request.form.get("event_name")
         start_time = request.form.get("start_time")
         end_time = request.form.get("end_time")
         location = request.form.get("location")
-        category = request.form.get("category")
+        #СДЕЛАТЬ КАТЕГОРИЮ СОВМЕТНОЙ ДЕФОЛТ
+        #category = request.form.get("category")
+        category = "Совместное"
         comment = request.form.get("comment")
+        request_status = 'pending'
+
         is_regular = request.form.get("is_regular")  # Получаем значение чекбокса
         regularity_interval = request.form.get("regularity_interval")
         days_of_week = request.form.get("days_of_week")
@@ -823,17 +762,17 @@ def create_shared_event():
         # Проверка обязательных полей
         if not event_name or not start_time or not end_time:
             flash("Пожалуйста, заполните все обязательные поля.", "error")
-            return redirect(url_for("create_event"))
+            return redirect(url_for("create_shared_event"))
 
         # Проверка форматирования дней недели
         if days_of_week and not all(day in '1234567' for day in days_of_week):
             flash("Некорректный формат дней недели. Используйте только цифры от 1 до 7.", "error")
-            return redirect(url_for("create_event"))
+            return redirect(url_for("create_shared_event"))
 
         # Проверка длины комментария
         if comment and len(comment) > 30:
             flash("Комментарий не должен превышать 30 символов.", "error")
-            return redirect(url_for("create_event"))
+            return redirect(url_for("create_shared_event"))
 
         try:
             start_time = datetime.strptime(start_time, "%Y-%m-%dT%H:%M")
@@ -844,16 +783,18 @@ def create_shared_event():
             # Проверка, не находится ли время в прошлом и время окончания больше времени начала
             if start_time < datetime.now():
                 flash("Время начала не может быть в прошлом.", "error")
-                return redirect(url_for("create_event"))
+                return redirect(url_for("create_shared_event"))
             if end_time <= start_time:
                 flash("Время окончания должно быть позже времени начала.", "error")
-                return redirect(url_for("create_event"))
+                return redirect(url_for("create_shared_event"))
 
         except ValueError:
             flash("Некорректный формат даты и времени.", "error")
-            return redirect(url_for("create_event"))
+            return redirect(url_for("create_shared_event"))
 
         conn = connect_to_db()
+
+        #_______ДОБАВЛЕНИЕ ДАННЫХ В БД_______
         try:
             cur = conn.cursor()
 
@@ -868,25 +809,25 @@ def create_shared_event():
                 )
                 regularity_id = cur.fetchone()[0]  # Получение созданного Regularity_ID
 
-                # Создание основного события с привязкой к Regularity_ID
+                # Создание основного совместного события с привязкой к Regularity_ID
                 cur.execute(
                     """
-                    INSERT INTO Events (User_login, Event_name, Start_time_and_date, End_time_and_date, Location, Category, Comment, Regularity_ID)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING Event_ID
+                    INSERT INTO JointSharedEventRequests (Senders_login, Recipient_login, Shared_event_name, Start_time_and_date, End_time_and_date, Regularity_ID, Location, Category, Comment, request_status)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING request_id;;
                     """,
-                    (user_login, event_name, start_time, end_time, location, category, comment, regularity_id)
+                    (current_user.user_login, recipient_login, event_name, start_time, end_time, regularity_id, location, category, comment, request_status)
                 )
             else:
                 # Если событие не регулярное, просто создаем его
                 cur.execute(
                     """
-                    INSERT INTO Events (User_login, Event_name, Start_time_and_date, End_time_and_date, Location, Category, Comment)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING Event_ID
+                    INSERT INTO JointSharedEventRequests (Senders_login, Recipient_login, Shared_event_name, Start_time_and_date, End_time_and_date, Location, Category, Comment, request_status)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING request_id;
                     """,
-                    (user_login, event_name, start_time, end_time, location, category, comment)
+                    (current_user.user_login, recipient_login, event_name, start_time, end_time, location, category, comment, request_status)
                 )
 
-            event_id = cur.fetchone()[0]  # Получение созданного Event_ID
+            event_id = cur.fetchone()[0]  # Получение созданного Request_ID
 
             # Если событие регулярное, создаем его экземпляры
             if is_regular:
@@ -896,12 +837,11 @@ def create_shared_event():
                 current_event_end_time += timedelta(weeks=int(regularity_interval))
                 while current_event_start_time <= end_repeat:
                     cur.execute(
-                        """
-                        INSERT INTO Events (User_login, Event_name, Start_time_and_date, End_time_and_date, Location, Category, Comment, Regularity_ID)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                        """,
-                        (user_login, event_name, current_event_start_time, current_event_end_time, location, category, comment,
-                         regularity_id)
+                            """
+                            INSERT INTO JointSharedEventRequests (Senders_login, Recipient_login, Shared_event_name, Start_time_and_date, End_time_and_date, Regularity_ID, Location, Category, Comment, request_status)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING request_id;
+                            """,
+                        (current_user.user_login, recipient_login, event_name, start_time, end_time, regularity_id, location, category, comment, request_status)
                     )
                     current_event_start_time += timedelta(weeks=int(regularity_interval))  # Увеличиваем на интервал
                     current_event_end_time += timedelta(weeks=int(regularity_interval))
@@ -918,4 +858,179 @@ def create_shared_event():
             cur.close()
             conn.close()
 
-    return render_template('create-event.html', active_page='my_events')
+    return render_template('request-shared-event.html', active_page='friends')
+
+@app.route('/shared-events')
+def shared_events():
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+
+    conn = None
+    shared_events_requests_received = []
+    shared_events_requests_sent = []
+
+    try:
+        conn = connect_to_db()
+        if conn:
+            cur = conn.cursor()
+
+            # Получаем заявки, отправленные к текущему пользователю
+            cur.execute(
+                "SELECT request_id, senders_login, Shared_event_name, Start_time_and_date, End_time_and_date, LOCATION, comment FROM JointSharedEventRequests WHERE Recipient_login = %s AND request_status = 'pending'",
+                (current_user.user_login,))
+            received_requests = cur.fetchall()
+
+            # Обрабатываем полученные заявки
+            for row in received_requests:
+                shared_events_requests_received.append({
+                    'request_id': row[0],
+                    'senders_login': row[1],
+                    'event_name': row[2],
+                    'start_time': row[3],
+                    'end_time': row[4],
+                    'location': row[5],
+                    'comment': row[6]
+                })
+
+            # Получаем заявки, отправленные текущим пользователем
+            cur.execute(
+                "SELECT recipient_login, Shared_event_name, Start_time_and_date, End_time_and_date, LOCATION, comment FROM JointSharedEventRequests WHERE senders_login = %s AND request_status = 'pending'",
+                (current_user.user_login,))
+            sent_requests = cur.fetchall()
+
+            # Обрабатываем отправленные заявки
+            for row in sent_requests:
+                shared_events_requests_sent.append({
+                    'recipient_login': row[0],
+                    'event_name': row[1],
+                    'start_time': row[2],
+                    'end_time': row[3],
+                    'location': row[4],
+                    'comment': row[5]
+                })
+
+            cur.close()
+    except Exception as e:
+        flash(f"Ошибка при получении данных: {e}", "error")
+    finally:
+        if conn:
+            conn.close()
+
+    return render_template(
+        'shared-events.html',
+        active_page='shared_events',
+        shared_events_requests_received=shared_events_requests_received,
+        shared_events_requests_sent=shared_events_requests_sent
+    )
+
+@app.route('/accept_share_event_request/<int:request_id>', methods=['POST'])
+def accept_share_event_request(request_id):
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+
+    conn = connect_to_db()
+
+    if conn:
+        cur = conn.cursor()
+
+        try:
+            # Получаем информацию о запросе
+            cur.execute(
+                """
+                SELECT 
+                    senders_login, 
+                    shared_event_name, 
+                    start_time_and_date, 
+                    end_time_and_date, 
+                    location, 
+                    category, 
+                    comment,
+                    regularity_id 
+                FROM JointSharedEventRequests 
+                WHERE request_id = %s
+                """,
+                (request_id,)
+            )
+            request_info = cur.fetchone()
+
+            if request_info:
+                senders_login, shared_event_name, start_time, end_time, location, category, comment, regularity_id = request_info
+
+                # Вставляем данные в SharedEvents
+                cur.execute(
+                    """
+                    INSERT INTO SharedEvents 
+                    (Shared_event_name, Start_time_and_date, End_time_and_date, LOCATION, Category, COMMENT, Regularity_ID) 
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    """,
+                    (shared_event_name, start_time, end_time, location, category, comment, regularity_id)
+                )
+
+                # Получаем ID созданного события
+                shared_event_id = cur.fetchone()[0]
+
+                # Добавляем участника события (текущего пользователя)
+                cur.execute(
+                    "INSERT INTO JointSharedEventParticipation (Shared_event_ID, User_login) VALUES (%s, %s)",
+                    (shared_event_id, current_user.user_login)
+                )
+
+                # Обновляем статус заявки на 'accepted'
+                cur.execute(
+                    "UPDATE JointSharedEventRequests SET request_status = 'accepted' WHERE request_id = %s",
+                    (request_id,)
+                )
+
+                conn.commit()
+
+                flash("Вы приняли запрос на совместное событие!", "success")
+            else:
+                flash("Заявка не найдена.", "error")
+
+        except Exception as e:
+            flash(f"Произошла ошибка: {e}", "error")
+            conn.rollback()  # В случае ошибки откатить изменения
+        finally:
+            cur.close()
+            conn.close()
+    else:
+        flash("Ошибка подключения к базе данных", "danger")
+
+    return redirect(url_for('shared_events'))  # Перенаправляем на страницу совместных событий
+
+@app.route('/decline_share_event_request/<int:request_id>', methods=['POST'])
+def decline_share_event_request(request_id):
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+
+    conn = connect_to_db()
+
+    if conn:
+        cur = conn.cursor()
+
+        try:
+            # Получаем информацию о запросе
+            cur.execute("SELECT senders_login FROM JointSharedEventRequests WHERE request_id = %s", (request_id,))
+            sender_info = cur.fetchone()
+
+            if sender_info:
+                sender_login = sender_info[0]
+
+                # Обновляем статус заявки на 'declined'
+                cur.execute("UPDATE JointSharedEventRequests SET request_status = 'declined' WHERE request_id = %s", (request_id,))
+                conn.commit()
+
+                flash(f"Вы отклонили запрос на совместное событие от {sender_login}.", "success")
+            else:
+                flash("Заявка не найдена.", "error")
+
+        except Exception as e:
+            flash(f"Произошла ошибка: {e}", "error")
+            conn.rollback()  # Откат изменений в случае ошибки
+        finally:
+            cur.close()
+            conn.close()
+    else:
+        flash("Ошибка подключения к базе данных", "danger")
+
+    return redirect(url_for('shared_events'))  # Перенаправляем на страницу совместных событий
