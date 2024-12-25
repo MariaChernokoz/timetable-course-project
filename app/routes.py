@@ -7,6 +7,8 @@ from app.user import User
 from datetime import datetime, timedelta
 import pytz
 
+user_timezone = pytz.timezone('Europe/Moscow')
+
 
 def connect_to_db():
     con = 0
@@ -77,7 +79,7 @@ def registration():
                 error = "Пользователь с таким логином уже существует."
             except psycopg.Error as e:
                 conn.rollback()
-                flash(f"Ошибка базы данных: {e}", "error")
+                flash(f"Ошибка базы данных.", "error")
             finally:
                 cur.close()
                 conn.close()
@@ -114,25 +116,36 @@ def create_event():
             flash("Некорректный формат дней недели. Используйте только цифры от 1 до 7.", "error")
             return redirect(url_for("create_event"))
 
+        # Проверка длины названия события
+        if event_name and len(event_name) > 30:
+            flash("Название события не должно превышать 30 символов.", "error")
+            return redirect(url_for("create_event"))
+
+        # Проверка длины места
+        if location and len(location) > 30:
+            flash("Место не должно превышать 30 символов.", "error")
+            return redirect(url_for("create_event"))
+
         # Проверка длины комментария
         if comment and len(comment) > 30:
             flash("Комментарий не должен превышать 30 символов.", "error")
             return redirect(url_for("create_event"))
-
         try:
-            start_time = datetime.strptime(start_time, "%Y-%m-%dT%H:%M")
-            end_time = datetime.strptime(end_time, "%Y-%m-%dT%H:%M")
+            # Локализуем время начала и окончания с учетом часового пояса пользователя
+            start_time = user_timezone.localize(datetime.strptime(start_time, "%Y-%m-%dT%H:%M"))
+            end_time = user_timezone.localize(datetime.strptime(end_time, "%Y-%m-%dT%H:%M"))
+
             if end_repeat:
-                end_repeat = datetime.strptime(end_repeat, "%Y-%m-%dT%H:%M")
+                end_repeat = user_timezone.localize(datetime.strptime(end_repeat, "%Y-%m-%dT%H:%M"))
 
             # Проверка, не находится ли время в прошлом и время окончания больше времени начала
-            if start_time < datetime.now():
+            if start_time < datetime.now(user_timezone):
                 flash("Время начала не может быть в прошлом.", "error")
                 return redirect(url_for("create_event"))
+
             if end_time <= start_time:
                 flash("Время окончания должно быть позже времени начала.", "error")
                 return redirect(url_for("create_event"))
-
         except ValueError:
             flash("Некорректный формат даты и времени.", "error")
             return redirect(url_for("create_event"))
@@ -143,6 +156,12 @@ def create_event():
 
             # Если событие регулярное, сначала создаем регулярность.
             if is_regular:
+                # Проверка: не раньше ли дата и время конца события
+                if end_repeat < end_time:
+                    # Если условия не соблюдены, обрабатываем ошибку.
+                    flash("Конец повторений должна быть позже времени окончания события.", "error")
+                    return redirect(url_for("create_event"))
+
                 cur.execute(
                     """
                     INSERT INTO Regularity (Regularity_interval, Days_of_week, End_date)
@@ -256,7 +275,7 @@ def my_events():
                 events_by_date[event_date].append(event_entry)  # Добавляем запись события
 
     except psycopg.Error as e:
-        flash(f"Ошибка базы данных: {e}", "error")
+        flash(f"Ошибка базы данных", "error")
     finally:
         if cur:
             cur.close()
@@ -295,7 +314,7 @@ def delete_event(event_id):
             conn.commit()
         except psycopg.Error as e:
             conn.rollback()
-            flash(f"Ошибка базы данных: {e}", "error")
+            flash(f"Ошибка базы данных", "error")
         finally:
             cur.close()
             conn.close()
@@ -311,6 +330,11 @@ def todos():
 
         if not task_name:
             flash("Пожалуйста, введите название задачи.", "error")
+            return redirect(url_for('todos'))
+
+        # Проверка длины названия задачи
+        if len(task_name) > 60:
+            flash("Название задачи не может превышать 60 символов.", "error")
             return redirect(url_for('todos'))
 
         conn = connect_to_db()
@@ -331,7 +355,7 @@ def todos():
                 return redirect(url_for('todos'))
             except psycopg.Error as e:
                 conn.rollback()
-                flash(f"Ошибка базы данных: {e}", "error")
+                flash(f"Ошибка базы данных", "error")
             finally:
                 cur.close()
                 conn.close()
@@ -364,7 +388,7 @@ def delete_task(taskid):
             flash("Задача успешно удалена!", "success")
         except psycopg.Error as e:
             conn.rollback()
-            flash(f"Ошибка базы данных: {e}", "error")
+            flash(f"Ошибка базы данных", "error")
         finally:
             cur.close()
             conn.close()

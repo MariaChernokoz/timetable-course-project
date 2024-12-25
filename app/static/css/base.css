@@ -77,3 +77,30 @@
         font-size: 0.7rem;
     }
 }
+
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+.fullscreen-image {
+    background-image: url('/static/img/main.png');
+    background-size: contain; /* Сохраняет пропорции изображения и полностью помещает его в контейнер */
+    background-position: center top; /* Центрирует изображение по горизонтали и прижимает к верхней части */
+    height: 400px; /* Фиксированная высота контейнера */
+    width: 100%; /* Ширина на 100% от контейнера */
+    /* margin-top: 30px; /* Сдвинуть вниз на 70 пикселей */
+}
+
+.responsive-img {
+    width: 100%; /* Сделать изображение адаптивным по ширине контейнера */
+    height: auto; /* Высота будет автоматически подстраиваться в зависимости от ширины для сохранения пропорций */
+    object-fit: cover; /* Обеспечивает заполнение контейнера, сохраняя пропорции */
+}

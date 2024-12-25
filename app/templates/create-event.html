@@ -3,8 +3,12 @@
 {% block title %}Создать новое событие{% endblock %}
 
 {% block content %}
-    <h1 class="event-title">Создать новое событие</h1>
+    <div class="header-container">
+        <h1 class="event-title">Создать новое событие</h1>
+        <a href="{{ url_for('my_events') }}" class="back-button">Вернуться к событиям</a>
+    </div>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/create-event.css') }}">
+
     <div class="event-form-container">
         <form method="POST">
             <div>
@@ -48,30 +52,34 @@
                 </label>
             </div>
 
-            <!-- ____регулятрноооооость______ -->
+            <!-- Регулярность -->
             <div id="regularity_settings" style="display: none;">
                 <div>
                     <label for="regularity_interval">Интервал (в неделях):</label>
                     <input type="number" id="regularity_interval" name="regularity_interval" min="1" max="52">
                 </div>
 
-                <div>
+                <!-- <div>
                     <label for="days_of_week">Дни недели (например, 135 для Пн, Ср, Пт):</label>
                     <input type="text" id="days_of_week" name="days_of_week" maxlength="7">
-                </div>
+                </div> -->
 
                 <div>
                     <label for="end_repeat">Конец повторений:</label>
                     <input type="datetime-local" id="end_repeat" name="end_repeat">
                 </div>
             </div>
-            <!-- ____регулятрноооооость______ -->
+            <!-- Регулярность -->
 
             <div>
                 <button type="submit" class="create-event-button">Создать событие</button>
             </div>
         </form>
     </div>
+
+    {% if error %}
+        <p class="danger">{{ error }}</p>
+    {% endif %}
 
     {% with messages = get_flashed_messages(with_categories=true) %}
        {% if messages %}
@@ -84,7 +92,7 @@
                {% endfor %}
            </div>
        {% endif %}
-    {% endwith %}
+   {% endwith %}
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
