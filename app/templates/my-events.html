@@ -6,6 +6,21 @@
 <h1>Мои события и совместные события</h1>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/events.css') }}">
 
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-messages">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+            {{ message }}
+            <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+{% endwith %}
+
+<a href="{{ url_for('create_event') }}" class="add-task-button">Создать новое событие</a>
+
 {% if events_by_date %}
     {% set all_dates = events_by_date.keys() | list %}
     {% for date in all_dates %}
