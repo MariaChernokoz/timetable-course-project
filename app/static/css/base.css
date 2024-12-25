@@ -77,3 +77,23 @@
         font-size: 0.7rem;
     }
 }
+
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+.container {
+    max-width: 1200px; /* Максимальная ширина контейнера */
+    margin: 0 auto; /* Центрирование контейнера */
+    padding: 0 15px; /* Отступы по бокам */
+}
+
+.fullscreen-image {
+    background-image: url('app/static/img/main.png');
+    background-size: cover; /* Растянуть изображение */
+    background-position: center; /* Центрировать изображение */
+    height: 400px; /* Высота изображения, можно изменить по желанию */
+    width: 100%; /* Ширина на 100% от контейнера */
+}

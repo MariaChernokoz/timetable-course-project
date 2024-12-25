@@ -31,13 +31,20 @@
                     <div class="task-category {{ event['category'] }}">{{ event['category'] }}</div>
                     <div class="task-info">
                         <span class="task-name">{{ event['name'] }}</span>
-                        <span class="task-deadline">({{ event['time'] }}), {{ event['location'] }}</span>
+                        <span class="task-deadline">({{ event['time'] }})</span>
                     </div>
-                    {% if event['comment'] %}
-                    <div class="task-comment" style="margin-left: auto;">
-                        {{ event['comment'] }}
+
+                    <div class="task-details">
+                        <div class="task-location">
+                            {{ event['location'] }}
+                        </div>
+                        <div class="separator"></div> <!-- Линия-разделитель -->
+                        {% if event['comment'] %}
+                            <div class="task-comment">
+                                {{ event['comment'] }}
+                            </div>
+                        {% endif %}
                     </div>
-                    {% endif %}
 
                     <!-- Кнопка для открытия модального окна -->
                     <button onclick="openModal({{ event['id'] }})" class="task-button">Удалить</button>
@@ -51,7 +58,7 @@
                                     <label>
                                         <input type="radio" name="delete_option" value="single" checked> Удалить это событие
                                     </label><br>
-                                    {% if event['regularity_id'] is not none %}  <!-- event['regularity_id'] хранит аналогичный ID для повторяющихся событий -->
+                                    {% if event['regularity_id'] is not none %}
                                     <label>
                                         <input type="radio" name="delete_option" value="all"> Удалить все повторяющиеся события
                                     </label><br>

@@ -72,3 +72,21 @@
     width: fit-content;
     display: block;
 }
+
+.back-button {
+    background-color: #404040; /* Цвет фона */
+    color: #fff; /* Цвет текста */
+    border: none; /* Без рамки */
+    padding: 10px 20px; /* Отступы */
+    border-radius: 10px; /* Закругленные углы */
+    cursor: pointer; /* Указатель при наведении */
+    text-align: center; /* Центрирование текста */
+    text-decoration: none; /* Убираем подчеркивание */
+    display: inline-block; /* Блочный элемент для центрирования */
+    transition: background-color 0.3s; /* Плавный переход цвета фона */
+
+}
+
+.back-button:hover {
+    background-color: #606060; /* Цвет фона при наведении */
+}

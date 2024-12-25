@@ -84,7 +84,7 @@
 
 .task-comment {
     margin-left: 20px; /* Добавьте отступы со стороны комментария, если это нужно */
-    color: #555; /* Цвет текста комментария */
+    color: #777; /* Цвет текста комментария */
     font-size: 0.9em; /* Размер шрифта */
 }
 
@@ -169,7 +169,7 @@ h1, h2 {
     border-radius: 5px;
     margin-left: 10px; /* Отступ для отделения от рамки события */
     position: relative;
-    top: -5px; /* Поднимет кнопку немного вверх относительно рамки */
+    /* top: -5px; /* Поднимет кнопку немного вверх относительно рамки */
 }
 
 .alert {
@@ -241,4 +241,23 @@ h1, h2 {
 .modal-close {
     background-color: #804040;
     color: white;
+}
+
+.task-details {
+    color: #777;
+    margin-left: auto; /* Отодвигает детали вправо */
+    text-align: right; /* Выравнивание текста по правому краю */
+    margin-top: 8px; /* Отступ сверху */
+}
+
+.task-location,
+.task-comment {
+    font-size: 1em;
+    color: #777;
+    margin-bottom: 5px; /* Отступ между строками локации и комментария */
+}
+
+.separator {
+    border-top: 1px solid #ccc; /* Цвет и толщина линии */
+    margin: 8px 0; /* Отступы сверху и снизу */
 }

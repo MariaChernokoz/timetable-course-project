@@ -114,6 +114,16 @@ def create_event():
             flash("Некорректный формат дней недели. Используйте только цифры от 1 до 7.", "error")
             return redirect(url_for("create_event"))
 
+        # Проверка длины названия события
+        if event_name and len(event_name) > 30:
+            flash("Название события не должно превышать 30 символов.", "error")
+            return redirect(url_for("create_event"))
+
+        # Проверка длины места
+        if location and len(location) > 30:
+            flash("Место не должно превышать 30 символов.", "error")
+            return redirect(url_for("create_event"))
+
         # Проверка длины комментария
         if comment and len(comment) > 30:
             flash("Комментарий не должен превышать 30 символов.", "error")
@@ -143,6 +153,12 @@ def create_event():
 
             # Если событие регулярное, сначала создаем регулярность.
             if is_regular:
+                # Проверка: не раньше ли дата и время конца события
+                if end_repeat < end_time:
+                    # Если условия не соблюдены, обрабатываем ошибку.
+                    flash("Конец повторений должна быть позже времени окончания события.", "error")
+                    return redirect(url_for("create_event"))
+
                 cur.execute(
                     """
                     INSERT INTO Regularity (Regularity_interval, Days_of_week, End_date)
