@@ -3,116 +3,79 @@
 {% block title %}Мои события{% endblock %}
 
 {% block content %}
-<h1>Мои события</h1>
+<h1>Мои события и совместные события</h1>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/events.css') }}">
 
-{% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    <div class="flash-messages">
-        {% for category, message in messages %}
-        <div class="alert alert-{{ category }}">
-            {{ message }}
-            <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-{% endwith %}
-
-<a href="{{ url_for('create_event') }}" class="add-task-button">Создать новое событие</a>
-
-
 {% if events_by_date %}
-    {% for date, events in events_by_date.items() %}
+    {% set all_dates = events_by_date.keys() | list %}
+    {% for date in all_dates %}
         <h2>{{ date.strftime('%Y-%m-%d') }}</h2>
         <div class="task-list-container">
             <ul class="task-list">
-                {% for event in events %}
-                <li class="task-item">
-                    <div class="task-category {{ event['category'] }}">{{ event['category'] }}</div>
-                    <div class="task-info">
-                        <span class="task-name">{{ event['name'] }}</span>
-                        <span class="task-deadline">({{ event['time'] }})</span>
-                    </div>
-
-                    <div class="task-details">
-                        <div class="task-location">
-                            {{ event['location'] }}
+                {% set events = events_by_date[date] %}
+                {% if events or shared_events %}
+                    {% for event in events %}
+                    <li class="task-item">
+                        <div class="task-category {{ event['category'] }}">{{ event['category'] }}</div>
+                        <div class="task-info">
+                            <span class="task-name">{{ event['name'] }}</span>
+                            <span class="task-deadline">({{ event['time'] }})</span>
                         </div>
-                        <div class="separator"></div> <!-- Линия-разделитель -->
-                        {% if event['comment'] %}
-                            <div class="task-comment">
-                                {{ event['comment'] }}
+
+                        <div class="task-details">
+                            <div class="task-location">
+                                {{ event['location'] }}
+                            </div>
+                            <div class="separator"></div>
+                            {% if event['comment'] %}
+                                <div class="task-comment">
+                                    {{ event['comment'] }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Кнопка для открытия модального окна -->
+                        {% if event['id'] is defined %}
+                            <button onclick="openModal({{ event['id'] }})" class="task-button">Удалить</button>
+                        {% endif %}
+
+                        <!-- Модальное окно -->
+                        {% if event['id'] is defined %}
+                            <div id="modal{{ event['id'] }}" class="modal">
+                                <div class="modal-content">
+                                    <div class="modal-header">Подтверждение удаления</div>
+                                    <div class="modal-body">
+                                        <form action="{{ url_for('delete_event', event_id=event['id']) }}" method="POST">
+                                            {% if event['regularity_id'] is not none %}
+                                                <p>Вы уверены, что хотите удалить это событие?</p>
+                                                <label>
+                                                    <input type="radio" name="delete_option" value="single" checked> Удалить это событие
+                                                </label><br>
+                                                <label>
+                                                    <input type="radio" name="delete_option" value="all"> Удалить все повторяющиеся события
+                                                </label><br>
+                                            {% else %}
+                                                <p>Удалить это событие?</p>
+                                            {% endif %}
+                                            <div class="modal-buttons">
+                                                <button type="button" class="modal-close" onclick="closeModal({{ event['id'] }})">Отмена</button>
+                                                <button type="submit" class="modal-submit">Подтвердить удаление</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
                         {% endif %}
-                    </div>
-
-                    <!-- Кнопка для открытия модального окна -->
-                    <button onclick="openModal({{ event['id'] }})" class="task-button">Удалить</button>
-
-                    <!-- Модальное окно -->
-                    <div id="modal{{ event['id'] }}" class="modal">
-                        <div class="modal-content">
-                            <div class="modal-header">Подтверждение удаления</div>
-                            <div class="modal-body">
-                                <form action="{{ url_for('delete_event', event_id=event['id']) }}" method="POST">
-                                    <label>
-                                        <input type="radio" name="delete_option" value="single" checked> Удалить это событие
-                                    </label><br>
-                                    {% if event['regularity_id'] is not none %}
-                                    <label>
-                                        <input type="radio" name="delete_option" value="all"> Удалить все повторяющиеся события
-                                    </label><br>
-                                    {% endif %}
-                                    <div class="modal-buttons">
-                                        <button type="button" class="modal-close" onclick="closeModal({{ event['id'] }})">Отмена</button>
-                                        <button type="submit" class="modal-submit">Подтвердить удаление</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </li>
-                {% endfor %}
+                    </li>
+                    {% endfor %}
+                {% else %}
+                    <li class="task-item">Нет событий для этого дня.</li>
+                {% endif %}
             </ul>
         </div>
     {% endfor %}
 {% else %}
     <p class="task-empty">Нет событий.</p>
-{% endif %}
-
-<h1>Мои совместные события</h1>
-{% if shared_events_by_date %}
-    {% for date, events in shared_events_by_date.items() %}
-        <h2>{{ date.strftime('%Y-%m-%d') }}</h2>
-        <div class="task-list-container">
-            <ul class="task-list">
-                {% for event in events %}
-                    <li class="task-item">
-                        <div class="task-category {{ event.category }}">{{ event.category }}</div>
-                        <div class="task-info">
-                            <span class="task-name">{{ event.name }}</span>
-                            <span class="task-deadline">({{ event.time }})</span>
-                        </div>
-
-                        <div class="task-details">
-                            <div class="task-location">
-                                {{ event.location }}
-                            </div>
-                            <div class="separator"></div>
-                            {% if event.comment %}
-                                <div class="task-comment">
-                                    {{ event.comment }}
-                                </div>
-                            {% endif %}
-                        </div>
-                    </li>
-                {% endfor %}
-            </ul>
-        </div>
-    {% endfor %}
-{% else %}
-    <p>У вас нет совместных событий.</p>
 {% endif %}
 
 <script>

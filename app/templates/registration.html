@@ -7,6 +7,19 @@
 </head>
 <body>
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+       {% if messages %}
+           <div class="flash-messages">
+               {% for category, message in messages %}
+                   <div class="alert alert-{{ category }}">
+                       {{ message }}
+                       <button class="close-btn" onclick="this.parentElement.style.display='none'">&times;</button>
+                   </div>
+               {% endfor %}
+           </div>
+       {% endif %}
+   {% endwith %}
+
 <div class="container">
     <h1>Регистрация</h1>
     {% if error %}
@@ -22,6 +35,7 @@
     <p>У вас уже есть аккаунт?<br>
        <a href="{{ url_for('login') }}">Обратно ко входу</a></p>
 </div>
+
 
 </body>
 </html>

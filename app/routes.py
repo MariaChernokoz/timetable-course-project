@@ -55,31 +55,44 @@ def logout():
     #flash("Вы успешно вышли из системы!", "success")
     return redirect(url_for('login'))
 
+
 @app.route("/registration", methods=["GET", "POST"])
 def registration():
     error = None
     if request.method == "POST":
         login = request.form.get("login")
-        password = generate_password_hash(request.form["password"])
+        password = request.form.get("password")
 
+        # Проверяем введенные данные
         if not login or not password:
             flash("Пожалуйста, заполните все поля.", "error")
             return render_template("registration.html")
+
+        # Ограничения на длину
+        if len(login) > 20:
+            flash("Логин не должен превышать 20 символов.", "error")
+            return render_template("registration.html")
+
+        if len(password) > 50:
+            flash("Пароль не должен превышать 50 символов.", "error")
+            return render_template("registration.html")
+
+        # Генерация хеша пароля
+        hashed_password = generate_password_hash(password)
 
         conn = connect_to_db()
         if conn:
             cur = conn.cursor()
             try:
-                cur.execute("INSERT INTO users (user_login, password) VALUES (%s, %s)", (login, password))
+                cur.execute("INSERT INTO users (user_login, password) VALUES (%s, %s)", (login, hashed_password))
                 conn.commit()
-                #flash("Регистрация прошла успешно!", "success")
                 return redirect(url_for("login"))
-            except psycopg.IntegrityError as e:
+            except psycopg.IntegrityError:
                 conn.rollback()
                 error = "Пользователь с таким логином уже существует."
-            except psycopg.Error as e:
+            except psycopg.Error:
                 conn.rollback()
-                flash(f"Ошибка базы данных.", "error")
+                flash("Ошибка базы данных.", "error")
             finally:
                 cur.close()
                 conn.close()
@@ -214,7 +227,7 @@ def create_event():
 
         except psycopg.Error as e:
             conn.rollback()
-            flash(f"Ошибка базы данных при создании события: {e}", "error")
+            flash(f"Ошибка базы данных при создании события", "error")
             return redirect(url_for("my_events"))  # Перенаправление на страницу со списком событий
 
         finally:
@@ -227,7 +240,6 @@ def create_event():
 def my_events():
     conn = connect_to_db()
     events_by_date = {}
-    shared_events_by_date = {}
     cur = None
     current_time = datetime.now(pytz.utc)  # Получаем текущее время с часовым поясом UTC
     try:
@@ -256,11 +268,9 @@ def my_events():
             else:
                 # Форматируем даты и время
                 if start_time.date() != end_time.date():
-                    # Если события начинаются и заканчиваются в разные дни
                     display_time = f"{start_time.strftime('%Y-%m-%d')} {start_time.strftime('%H:%M')} - " \
                                    f"{end_time.strftime('%Y-%m-%d')} {end_time.strftime('%H:%M')}"
                 else:
-                    # Если события начинаются и заканчиваются в один день
                     display_time = f"{start_time.strftime('%H:%M')} - {end_time.strftime('%H:%M')}"
 
                 event_entry = {
@@ -277,43 +287,43 @@ def my_events():
                     events_by_date[event_date] = []
                 events_by_date[event_date].append(event_entry)  # Добавляем запись события
 
+        # Получение совместных событий
+        cur.execute("""
+            SELECT se.Shared_event_name, se.Start_time_and_date, se.End_time_and_date, 
+                   se.Location, se.Category, se.Comment
+            FROM SharedEvents AS se
+            INNER JOIN JointSharedEventParticipation AS jp ON se.Shared_event_ID = jp.Shared_event_ID
+            WHERE jp.User_login = %s
+            ORDER BY se.Start_time_and_date
+        """, (current_user.user_login,))
 
-            # Получение совместных событий
-            cur.execute("""
-                SELECT se.Shared_event_name, se.Start_time_and_date, se.End_time_and_date, 
-                       se.Location, se.Category, se.Comment
-                FROM SharedEvents AS se
-                INNER JOIN JointSharedEventParticipation AS jp ON se.Shared_event_ID = jp.Shared_event_ID
-                WHERE jp.User_login = %s
-                ORDER BY se.Start_time_and_date
-            """, (current_user.user_login,))
+        fetched_shared_events = cur.fetchall()
 
-            fetched_shared_events = cur.fetchall()
+        for event in fetched_shared_events:
+            event_name, start_time, end_time, location, category, comment = event
 
-            for event in fetched_shared_events:
-                event_name, start_time, end_time, location, category, comment = event
+            # Форматируем даты и время для совместных событий
+            if start_time.date() != end_time.date():
+                display_time = f"{start_time.strftime('%Y-%m-%d')} {start_time.strftime('%H:%M')} - " \
+                               f"{end_time.strftime('%Y-%m-%d')} {end_time.strftime('%H:%M')}"
+            else:
+                display_time = f"{start_time.strftime('%H:%M')} - {end_time.strftime('%H:%M')}"
 
-                # Форматируем даты и время для совместных событий
-                if start_time.date() != end_time.date():
-                    display_time = f"{start_time.strftime('%Y-%m-%d')} {start_time.strftime('%H:%M')} - " \
-                                   f"{end_time.strftime('%Y-%m-%d')} {end_time.strftime('%H:%M')}"
-                else:
-                    display_time = f"{start_time.strftime('%H:%M')} - {end_time.strftime('%H:%M')}"
+            shared_event_entry = {
+                "id": event_id,
+                "name": event_name,
+                "time": display_time,
+                "location": location,
+                "category": category,
+                "comment": comment
+            }
 
-                shared_event_entry = {
-                    "name": event_name,
-                    "time": display_time,
-                    "location": location,
-                    "category": category,
-                    "comment": comment
-                }
-
-                event_date = start_time.date()  # Получаем только дату
-                if event_date not in shared_events_by_date:
-                    shared_events_by_date[event_date] = []
-                # Пример проверки на существование записи
-                if shared_event_entry not in shared_events_by_date[event_date]:
-                    shared_events_by_date[event_date].append(shared_event_entry)
+            event_date = start_time.date()  # Получаем только дату
+            if event_date not in events_by_date:
+                events_by_date[event_date] = []
+            # Пример проверки на существование записи
+            if shared_event_entry not in events_by_date[event_date]:
+                events_by_date[event_date].append(shared_event_entry)
 
     except psycopg.Error as e:
         flash(f"Ошибка базы данных", "error")
@@ -322,7 +332,8 @@ def my_events():
             cur.close()
         conn.close()
 
-    return render_template('my-events.html', active_page='my_events', events_by_date=events_by_date, shared_events_by_date=shared_events_by_date)
+    return render_template('my-events.html', active_page='my_events', events_by_date=events_by_date)
+
 
 @app.route('/events/delete/<int:event_id>', methods=['POST'])
 def delete_event(event_id):
@@ -834,6 +845,17 @@ def request_shared_event(recipient_login):
             flash("Некорректный формат дней недели. Используйте только цифры от 1 до 7.", "error")
             return redirect(url_for("create_shared_event"))
 
+        # Проверка длины названия события
+        if event_name and len(event_name) > 30:
+            flash("Название события не должно превышать 30 символов.", "error")
+            return redirect(url_for("create_event"))
+
+        # Проверка длины места
+        if location and len(location) > 30:
+            flash("Место не должно превышать 30 символов.", "error")
+            return redirect(url_for("create_event"))
+
+
         # Проверка длины комментария
         if comment and len(comment) > 30:
             flash("Комментарий не должен превышать 30 символов.", "error")
@@ -1142,3 +1164,5 @@ def cancel_share_event_request(request_id):
         flash("Ошибка подключения к базе данных", "danger")
 
     return redirect(url_for('shared_events'))  # Перенаправляем на страницу совместных событий
+
+

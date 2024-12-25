@@ -34,9 +34,9 @@ window.onclick = function(event) {
     }
 }
 </script>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/friends.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/events.css') }}">
 
-<div class="friend-list-container">
+<div class="task-list-container">
     <h1>Запросы на совместные события</h1>
 
     <!-- Запросы, полученные от других пользователей -->
@@ -48,12 +48,14 @@ window.onclick = function(event) {
                     <li class="task-item">
                         <div class="task-info">
                             <span class="task-name">{{ request.event_name }}</span>
-                            <span class="task-date">({{ request.start_time.strftime('%Y-%m-%d %H:%M') }} - {{ request.end_time.strftime('%Y-%m-%d %H:%M') }})</span>
+                            <span class="task-deadline">({{ request.start_time.strftime('%Y-%m-%d %H:%M') }} - {{ request.end_time.strftime('%Y-%m-%d %H:%M') }})</span>
                         </div>
 
                         <div class="task-details">
                             <div class="task-location">
-                                <strong>Место:</strong> {{ request.location }}
+                                {% if request.location %}
+                                    <strong>Место:</strong> {{ request.location }}
+                                {% endif %}
                             </div>
                             <div class="task-comment">
                                 {% if request.comment %}
@@ -78,7 +80,7 @@ window.onclick = function(event) {
             </ul>
         </div>
     {% else %}
-        <div class="friend-item friend-empty">У вас нет запросов на совместные события.</div>
+        <div class="event-item event-empty">У вас нет запросов на совместные события.</div>
     {% endif %}
 
     <!-- Запросы, отправленные вами -->
@@ -90,20 +92,22 @@ window.onclick = function(event) {
                     <li class="task-item">
                         <div class="task-info">
                             <span class="task-name">{{ request.event_name }}</span>
-                            <span class="task-date">({{ request.start_time.strftime('%Y-%m-%d %H:%M') }} - {{ request.end_time.strftime('%Y-%m-%d %H:%M') }})</span>
+                            <span class="task-deadline">({{ request.start_time.strftime('%Y-%m-%d %H:%M') }} - {{ request.end_time.strftime('%Y-%m-%d %H:%M') }})</span>
                         </div>
 
                         <div class="task-details">
                             <div class="task-location">
-                                <strong>Место:</strong> {{ request.location }}
+                                {% if request.location %}
+                                    <strong>Место:</strong> {{ request.location }}
+                                {% endif %}
                             </div>
                             <div class="task-comment">
                                 {% if request.comment %}
                                     <strong>Комментарий:</strong> {{ request.comment }}
                                 {% endif %}
                             </div>
-                            <div class="task-receiver">
-                                <strong>Получатель:</strong> {{ request.recipient_login }}
+                            <div class="task-sender">
+                                <strong>Отправитель:</strong> {{ request.senders_login }}
                             </div>
                         </div>
 
@@ -117,7 +121,7 @@ window.onclick = function(event) {
             </ul>
         </div>
     {% else %}
-        <div class="friend-item friend-empty">Вы не отправили запросов на совместные события.</div>
+        <div class="event-item event-empty">Вы не отправили запросов на совместные события.</div>
     {% endif %}
 </div>
 
