@@ -4,7 +4,7 @@ from app import app
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, current_user, logout_user
 from app.user import User
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import pytz
 
 user_timezone = pytz.timezone('Europe/Moscow')
@@ -522,16 +522,17 @@ def edit_event(event_id):
 
 @app.route('/todos', methods=['GET', 'POST'])
 def todos():
+    current_datetime = datetime.now().replace(tzinfo=None)  # Оставляем как datetime
     if request.method == 'POST':
         task_name = request.form.get('task_name')
-        deadline = request.form.get('deadline')  # Дата может быть пустой
+        deadline_date = request.form.get('deadline')
+        deadline_time = request.form.get('time')
         user_login = current_user.user_login
 
         if not task_name:
             flash("Пожалуйста, введите название задачи.", "error")
             return redirect(url_for('todos'))
 
-        # Проверка длины названия задачи
         if len(task_name) > 60:
             flash("Название задачи не может превышать 60 символов.", "error")
             return redirect(url_for('todos'))
@@ -540,26 +541,28 @@ def todos():
         if conn:
             cur = conn.cursor()
             try:
-                # Если deadline не указан, используем None
-                if not deadline:
+                if not deadline_date or not deadline_time:
                     deadline = None
+                else:
+                    deadline_str = f"{deadline_date} {deadline_time}"
+                    deadline = datetime.strptime(deadline_str, "%Y-%m-%d %H:%M").replace(tzinfo=None)
 
                 cur.execute(
                     "INSERT INTO Tasks (User_login, Task_name, Creation_date, Deadline, Task_status) VALUES (%s, %s, NOW(), %s, %s) RETURNING taskid",
                     (user_login, task_name, deadline, 'Новая')
                 )
-                taskid = cur.fetchone()[0]  # Получаем ID новой задачи
+                taskid = cur.fetchone()[0]
                 conn.commit()
                 flash("Задача успешно добавлена!", "success")
                 return redirect(url_for('todos'))
             except psycopg.Error as e:
                 conn.rollback()
-                flash(f"Ошибка базы данных", "error")
+                flash(f"Ошибка базы данных: {e}", "error")
             finally:
                 cur.close()
                 conn.close()
 
-    # Получаем список задач текущего пользователя
+    # Получаем список задач
     tasks = []
     conn = connect_to_db()
     if conn:
@@ -567,13 +570,18 @@ def todos():
         cur.execute("SELECT Taskid, Task_name, Deadline FROM Tasks WHERE User_login = %s", (current_user.user_login,))
         fetched_tasks = cur.fetchall()
 
-        # Форматируем дату и время перед передачей в шаблон
-        tasks = [(task[0], task[1], task[2].strftime('%Y-%m-%d %H:%M') if task[2] else '') for task in fetched_tasks]
+        for task in fetched_tasks:
+            taskid, task_name, deadline = task
+            if deadline is not None:
+                deadline_date = deadline.replace(tzinfo=None)
+            else:
+                deadline_date = None
+            tasks.append((taskid, task_name, deadline_date))
 
         cur.close()
         conn.close()
 
-    return render_template('todos.html', active_page='todos', tasks=tasks)
+    return render_template('todos.html', active_page='todos', tasks=tasks, current_datetime=current_datetime)
 
 @app.route('/todos/delete/<int:taskid>', methods=['POST'])
 def delete_task(taskid):
@@ -592,12 +600,6 @@ def delete_task(taskid):
             cur.close()
             conn.close()
     return redirect(url_for('todos'))
-
-
-'''@app.route('/shared-events')
-def shared_events():
-   return render_template('shared-events.html', active_page = 'shared_events')
-'''
 
 @app.route('/friendsrequests')
 def friendsrequests():

@@ -73,6 +73,7 @@
     box-sizing: border-box;
     width: fit-content;
 }
+
 .modal {
     display: none;
     position: absolute;
@@ -191,4 +192,17 @@
     cursor: pointer;
     padding: 0;
     margin-left: 15px;
+}
+
+.task-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Вертикальное выравнивание */
+    flex-grow: 1; /* Позволяет контейнеру занимать оставшееся пространство */
+    position: relative; /* Чтобы элементы внутри могли быть абсолютно позиционированы если необходимо */
+}
+
+.task-tooltip-container {
+    display: flex;
+    justify-content: flex-end; /* Выравнивает элементы по правому краю */
 }

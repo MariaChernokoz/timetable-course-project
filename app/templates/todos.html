@@ -11,13 +11,17 @@
             {% for task in tasks %}
             <li class="task-item">
                 <form action="{{ url_for('delete_task', taskid=task[0]) }}" method="POST" class="task-form">
-                    <button type="submit" class="task-button" onclick="return confirm('Вы уверены, что хотите удалить эту задачу?');">Выполнено</button>
+                    <button type="submit" class="task-button delete-task-button" onclick="return confirm('Вы уверены, что хотите удалить эту задачу?');">Выполнено</button>
                 </form>
                 <div class="task-info">
                     <strong class="task-name">{{ task[1] }}</strong>
                     <span class="task-deadline">
                         {% if task[2] %}
-                            Срок: {{ task[2] }}
+                            Срок: {{ task[2].strftime('%Y-%m-%d %H:%M') }}  {# Форматируем дату без секунд #}
+                            {% if task[2] < current_datetime %}
+                                <button type="button" class="task-button tooltip-button">!</button>
+                                <span class="tooltip">Срок выполнения задачи прошел</span>
+                            {% endif %}
                         {% endif %}
                     </span>
                 </div>
@@ -93,6 +97,18 @@
                 dateFormat: "yy-mm-dd",
                 minDate: 0 // Запрет на выбор прошедших дат
             });
+
+            // Tooltip для кнопки "!"
+            $('.tooltip-button').hover(
+                function() {
+                    $(this).siblings('.tooltip').fadeIn(200);
+                },
+                function() {
+                    $(this).siblings('.tooltip').fadeOut(200);
+                }
+            ).click(function() {
+                $(this).siblings('.tooltip').fadeOut(200);
+            });
         });
     </script>
     <script>
@@ -104,5 +120,20 @@
         });
     }, 5000);
     </script>
+
+    <style>
+        .tooltip {
+            display: none;
+            position: absolute;
+            background-color: #404040;
+            color: #fff;
+            text-align: center;
+            border-radius: 5px;
+            padding: 5px;
+            z-index: 10;
+            width: 200px; /* ширина подсказки */
+            margin-top: 5px; /* небольшое смещение снизу */
+        }
+    </style>
 
 {% endblock %}
