@@ -416,6 +416,7 @@ def delete_event(event_id):
 from datetime import datetime
 import pytz
 
+
 @app.route('/edit-event/<int:event_id>', methods=["GET", "POST"])
 def edit_event(event_id):
     conn = connect_to_db()
@@ -424,29 +425,59 @@ def edit_event(event_id):
         if request.method == 'POST':
             # Получаем данные из формы
             event_name = request.form.get('event_name')
-            event_category = request.form.get('category')  # Исправлено с 'event_category' на 'category'
-            event_start_time_str = request.form.get('start_time')  # Начало события
-            event_end_time_str = request.form.get('end_time')      # Конец события
+            event_category = request.form.get('category')
+            event_start_time_str = request.form.get('start_time')
+            event_end_time_str = request.form.get('end_time')
             event_location = request.form.get('location')
             event_comment = request.form.get('comment')
+            is_regular = request.form.get("is_regular")  # Чекбокс: регулярное событие или нет
+            regularity_interval = request.form.get("regularity_interval")
+            days_of_week = request.form.get("days_of_week")
+            end_repeat = request.form.get("end_repeat")  # Дата окончания повторений
 
-
-            # Получаем временной пояс пользователя
             user_timezone = pytz.timezone('Europe/Moscow')  # Замените на нужный вам часовой пояс
 
             try:
-                # Преобразуем строки времени в объекты datetime
                 event_start_time = user_timezone.localize(datetime.strptime(event_start_time_str, "%Y-%m-%dT%H:%M"))
                 event_end_time = user_timezone.localize(datetime.strptime(event_end_time_str, "%Y-%m-%dT%H:%M"))
 
-                # Обновляем данные события в базе данных
-                cur.execute("""
-                    UPDATE Events
-                    SET Event_name = %s, Category = %s, Start_time_and_date = %s, End_time_and_date = %s,
-                        LOCATION = %s, COMMENT = %s
-                    WHERE Event_ID = %s AND User_login = %s
-                """, (event_name, event_category, event_start_time, event_end_time, event_location,
-                      event_comment, event_id, current_user.user_login))
+                if is_regular:
+                    # Проверка: не ранее ли дата и время конца события
+                    if end_repeat < event_end_time:
+                        flash("Конец повторений должен быть позже времени окончания события.", "error")
+                        return redirect(url_for("edit_event", event_id=event_id))
+
+                    # Обновление или создание записи регулярности
+                    cur.execute("""
+                        INSERT INTO Regularity (Regularity_interval, Days_of_week, End_date)
+                        VALUES (%s, %s, %s) 
+                        ON CONFLICT (Regularity_ID) DO UPDATE
+                        SET Regularity_interval = excluded.Regularity_interval,
+                            Days_of_week = excluded.Days_of_week,
+                            End_date = excluded.End_date
+                        RETURNING Regularity_ID
+                    """, (regularity_interval, days_of_week, end_repeat))
+
+                    regularity_id = cur.fetchone()[0]
+
+                    # Обновляем событие с привязкой к Regularity_ID
+                    cur.execute("""
+                        UPDATE Events
+                        SET Event_name = %s, Category = %s, Start_time_and_date = %s, End_time_and_date = %s,
+                            Location = %s, Comment = %s, Regularity_ID = %s
+                        WHERE Event_ID = %s AND User_login = %s
+                    """, (event_name, event_category, event_start_time, event_end_time, event_location,
+                          event_comment, regularity_id, event_id, current_user.user_login))
+
+                else:
+                    # Если событие не регулярное, обновляем без изменения Regularity_ID
+                    cur.execute("""
+                        UPDATE Events
+                        SET Event_name = %s, Category = %s, Start_time_and_date = %s, End_time_and_date = %s,
+                            Location = %s, Comment = %s, Regularity_ID = NULL
+                        WHERE Event_ID = %s AND User_login = %s
+                    """, (event_name, event_category, event_start_time, event_end_time, event_location,
+                          event_comment, event_id, current_user.user_login))
 
                 conn.commit()
                 flash("Событие успешно обновлено!", "success")
@@ -463,12 +494,22 @@ def edit_event(event_id):
         else:
             # Получаем текущее состояние события для отображения в форме
             cur.execute("""
-                SELECT Event_name, Category, Start_time_and_date, End_time_and_date, LOCATION, COMMENT
+                SELECT Event_name, Category, Start_time_and_date, End_time_and_date, Location, Comment, Regularity_ID
                 FROM Events WHERE Event_ID = %s
             """, (event_id,))
             event = cur.fetchone()
             if event:
-                return render_template('edit-event.html', event=event)
+                # Получим данные регулярности, если они есть
+                if event[6]:  # Если Regularity_ID существует
+                    cur.execute("""
+                        SELECT Regularity_interval, Days_of_week, End_date
+                        FROM Regularity WHERE Regularity_ID = %s
+                    """, (event[6],))
+                    regularity = cur.fetchone()
+                else:
+                    regularity = None
+
+                return render_template('edit-event.html', event=event, regularity=regularity)
             else:
                 flash("Событие не найдено!", "error")
                 return redirect(url_for('my_events'))
