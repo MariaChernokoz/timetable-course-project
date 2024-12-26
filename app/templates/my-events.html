@@ -31,7 +31,13 @@
                 {% if events %}
                     {% for event in events %}
                     <li class="task-item">
-                        <div class="task-category {{ event['category'] }}">{{ event['category'] }}</div>
+                        <div class="task-category {{ event['category'] }}">
+                            {% if event['category'] == 'Совместное' %}
+                                Совместное с {{ event['user_login'] }}
+                            {% else %}
+                                {{ event['category'] }}
+                            {% endif %}
+                        </div>
                         <div class="task-info">
                             <span class="task-name">{{ event['name'] }}</span>
                             <span class="task-deadline">({{ event['time'] }})</span>
