@@ -48,7 +48,13 @@ window.onclick = function(event) {
                     <li class="task-item">
                         <div class="task-info">
                             <span class="task-name">{{ request.event_name }}</span>
-                            <span class="task-deadline">({{ request.start_time.strftime('%Y-%m-%d %H:%M') }} - {{ request.end_time.strftime('%Y-%m-%d %H:%M') }})</span>
+                            <span class="task-deadline">
+                                {% if request.start_time.date() == request.end_time.date() %}
+                                    ({{ request.start_time.strftime('%Y-%m-%d') }} {{ request.start_time.strftime('%H:%M') }} - {{ request.end_time.strftime('%H:%M') }})
+                                {% else %}
+                                    ({{ request.start_time.strftime('%Y-%m-%d %H:%M') }} - {{ request.end_time.strftime('%Y-%m-%d %H:%M') }})
+                                {% endif %}
+                            </span>
                         </div>
 
                         <div class="task-details">
@@ -92,7 +98,13 @@ window.onclick = function(event) {
                     <li class="task-item">
                         <div class="task-info">
                             <span class="task-name">{{ request.event_name }}</span>
-                            <span class="task-deadline">({{ request.start_time.strftime('%Y-%m-%d %H:%M') }} - {{ request.end_time.strftime('%Y-%m-%d %H:%M') }})</span>
+                            <span class="task-deadline">
+                                {% if request.start_time.date() == request.end_time.date() %}
+                                    ({{ request.start_time.strftime('%Y-%m-%d') }} {{ request.start_time.strftime('%H:%M') }} - {{ request.end_time.strftime('%H:%M') }})
+                                {% else %}
+                                    ({{ request.start_time.strftime('%Y-%m-%d %H:%M') }} - {{ request.end_time.strftime('%Y-%m-%d %H:%M') }})
+                                {% endif %}
+                            </span>
                         </div>
 
                         <div class="task-details">
