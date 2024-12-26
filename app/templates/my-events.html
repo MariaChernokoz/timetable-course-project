@@ -21,6 +21,7 @@
 
 <a href="{{ url_for('create_event') }}" class="add-task-button">Создать новое событие</a>
 
+
 {% if events_by_date %}
     {% set all_dates = events_by_date.keys() | list %}
     {% for date in all_dates %}
@@ -57,6 +58,7 @@
 
                         <!-- Кнопка для открытия модального окна -->
                         {% if event['id'] is defined %}
+                            <a href="{{ url_for('edit_event', event_id=event['id']) }}" class="task-button">Ред</a>
                             <button onclick="openModal({{ event['id'] }})" class="task-button">Удалить</button>
                         {% endif %}
 

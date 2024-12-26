@@ -163,6 +163,7 @@ h1, h2 {
 .task-button {
     background-color: #800000;
     color: white;
+    text-decoration: none; /* Убирает подчеркивание */
     border: none;
     padding: 8px 15px;
     cursor: pointer;

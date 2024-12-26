@@ -173,6 +173,7 @@ h1, h2 {
     border-radius: 5px;
     margin-left: 10px; /* Отступ для отделения от рамки события */
     position: relative;
+    text-decoration: none; /* Убирает подчеркивание */
     /* top: -5px; /* Поднимет кнопку немного вверх относительно рамки */
 }
 

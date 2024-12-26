@@ -412,6 +412,69 @@ def delete_event(event_id):
 
     return redirect(url_for('my_events'))
 
+
+from datetime import datetime
+import pytz
+
+@app.route('/edit-event/<int:event_id>', methods=["GET", "POST"])
+def edit_event(event_id):
+    conn = connect_to_db()
+    if conn:
+        cur = conn.cursor()
+        if request.method == 'POST':
+            # Получаем данные из формы
+            event_name = request.form.get('event_name')
+            event_category = request.form.get('category')  # Исправлено с 'event_category' на 'category'
+            event_start_time_str = request.form.get('start_time')  # Начало события
+            event_end_time_str = request.form.get('end_time')      # Конец события
+            event_location = request.form.get('location')
+            event_comment = request.form.get('comment')
+
+
+            # Получаем временной пояс пользователя
+            user_timezone = pytz.timezone('Europe/Moscow')  # Замените на нужный вам часовой пояс
+
+            try:
+                # Преобразуем строки времени в объекты datetime
+                event_start_time = user_timezone.localize(datetime.strptime(event_start_time_str, "%Y-%m-%dT%H:%M"))
+                event_end_time = user_timezone.localize(datetime.strptime(event_end_time_str, "%Y-%m-%dT%H:%M"))
+
+                # Обновляем данные события в базе данных
+                cur.execute("""
+                    UPDATE Events
+                    SET Event_name = %s, Category = %s, Start_time_and_date = %s, End_time_and_date = %s,
+                        LOCATION = %s, COMMENT = %s
+                    WHERE Event_ID = %s AND User_login = %s
+                """, (event_name, event_category, event_start_time, event_end_time, event_location,
+                      event_comment, event_id, current_user.user_login))
+
+                conn.commit()
+                flash("Событие успешно обновлено!", "success")
+            except ValueError:
+                flash("Некорректный формат даты и времени.", "error")
+            except psycopg.Error as e:
+                conn.rollback()
+                flash(f"Ошибка базы данных: {str(e)}", "error")
+            finally:
+                cur.close()
+                conn.close()
+
+            return redirect(url_for('my_events'))
+        else:
+            # Получаем текущее состояние события для отображения в форме
+            cur.execute("""
+                SELECT Event_name, Category, Start_time_and_date, End_time_and_date, LOCATION, COMMENT
+                FROM Events WHERE Event_ID = %s
+            """, (event_id,))
+            event = cur.fetchone()
+            if event:
+                return render_template('edit-event.html', event=event)
+            else:
+                flash("Событие не найдено!", "error")
+                return redirect(url_for('my_events'))
+
+    return render_template('edit-event.html', active_page='my_events')
+
 @app.route('/todos', methods=['GET', 'POST'])
 def todos():
     if request.method == 'POST':

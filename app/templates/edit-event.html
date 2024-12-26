@@ -4,41 +4,65 @@
 
 {% block content %}
     <h1>Редактировать событие</h1>
-     {% with messages = get_flashed_messages(with_categories=True) %}
-    {% if messages %}
-        <ul>
-        {% for category, message in messages %}
-            <li class="{{ category }}">{{ message }}</li>
-        {% endfor %}
-        </ul>
-    {% endif %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/create-event.css') }}">
+    {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+            <ul>
+            {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
     {% endwith %}
     {% if event %}
-        <form method="POST">
-        <label for="event_name">Название события:</label>
-        <input type="text" id="event_name" name="event_name" value="{{ event[2] }}" required>
+        <div class="event-form-container">
+            <form method="POST">
+                <label for="event_name">Название события:</label>
+                <input type="text" id="event_name" name="event_name" value="{{ event[0] }}" required> <!-- Индекс 0 для названия события -->
 
-        <label for="start_time">Начало:</label>
-        <input type="datetime-local" id="start_time" name="start_time" value="{{ event[3].strftime('%Y-%m-%dT%H:%M') }}" required>
+                <label for="start_time">Начало:</label>
+                <input type="datetime-local" id="start_time" name="start_time" value="{{ event[2].strftime('%Y-%m-%dT%H:%M') }}" required> <!-- Индекс 2 для времени начала -->
 
-        <label for="end_time">Конец:</label>
-        <input type="datetime-local" id="end_time" name="end_time" value="{{ event[4].strftime('%Y-%m-%dT%H:%M') }}" required>
+                <label for="end_time">Конец:</label>
+                <input type="datetime-local" id="end_time" name="end_time" value="{{ event[3].strftime('%Y-%m-%dT%H:%M') }}" required> <!-- Индекс 3 для времени конца -->
 
-        <label for="location">Место:</label>
-        <input type="text" id="location" name="location" value="{{ event[5] }}">
-         <label for="category">Категория:</label>
-        <select id="category" name="category" required>
-            <option value="Личное" {% if event[6] == 'Личное' %}selected{% endif %}>Личное</option>
-            <option value="Работа" {% if event[6] == 'Работа' %}selected{% endif %}>Работа</option>
-            <option value="Учёба" {% if event[6] == 'Учёба' %}selected{% endif %}>Учёба</option>
-        </select>
+                <label for="location">Место:</label>
+                <input type="text" id="location" name="location" value="{{ event[4] }}"> <!-- Индекс 4 для места -->
 
-        <label for="comment">Комментарий:</label>
-        <textarea id="comment" name="comment">{{ event[7] }}</textarea>
+                <label for="category">Категория:</label>
+                <select id="category" name="category" class="select-dropdown" required>
+                    <option value="----------" {% if event[1] == 'Без категории' %}selected{% endif %}>Без категории</option>
+                    <option value="Личное" {% if event[1] == 'Личное' %}selected{% endif %}>Личное</option> <!-- Индекс 1 для категории -->
+                    <option value="Работа" {% if event[1] == 'Работа' %}selected{% endif %}>Работа</option>
+                    <option value="Учёба" {% if event[1] == 'Учёба' %}selected{% endif %}>Учёба</option>
+                </select>
 
-        <button type="submit">Сохранить изменения</button>
-    </form>
+                <label for="comment">Комментарий:</label>
+                <textarea id="comment" name="comment">{{ event[5] }}</textarea> <!-- Индекс 5 для комментария -->
+
+                <button type="submit" class="create-event-button">Сохранить изменения</button>
+
+                <!-- Регулярность -->
+                <div id="regularity_settings" style="display: none;">
+                    <div>
+                        <label for="regularity_interval">Интервал (в неделях):</label>
+                        <input type="number" id="regularity_interval" name="regularity_interval" value="{{ event[6] }}" min="1" max="52">
+                    </div>
+
+                    <!-- <div>
+                        <label for="days_of_week">Дни недели (например, 135 для Пн, Ср, Пт):</label>
+                        <input type="text" id="days_of_week" name="days_of_week" maxlength="7">
+                    </div> -->
+
+                    <div>
+                        <label for="end_repeat">Конец повторений:</label>
+                        <input type="datetime-local" id="end_repeat" name="end_repeat">
+                    </div>
+                </div>
+            <!-- Регулярность -->
+            </form>
+        </div>
     {% else %}
-       <p>Событие не найдено</p>
+        <p>Событие не найдено</p>
     {% endif %}
 {% endblock %}
