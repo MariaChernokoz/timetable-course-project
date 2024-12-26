@@ -60,6 +60,7 @@
                                 <div class="modal-content">
                                     <div class="modal-header">Подтверждение удаления</div>
                                     <div class="modal-body">
+
                                         <form action="{{ url_for('delete_event', event_id=event['id']) }}" method="POST">
                                             {% if event['regularity_id'] is not none %}
                                                 <p>Вы уверены, что хотите удалить это событие?</p>
@@ -77,6 +78,7 @@
                                                 <button type="submit" class="modal-submit">Подтвердить удаление</button>
                                             </div>
                                         </form>
+
                                     </div>
                                 </div>
                             </div>

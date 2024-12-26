@@ -244,16 +244,17 @@ def my_events():
     current_time = datetime.now(pytz.utc)  # Получаем текущее время с часовым поясом UTC
     try:
         cur = conn.cursor()
+        event_id = None
 
         # Получение событий пользователя
         cur.execute("""
-            SELECT Event_ID, Event_name, Start_time_and_date, End_time_and_date, Location, Category, Comment
+            SELECT Event_ID, Event_name, Start_time_and_date, End_time_and_date, Location, Category, Comment, regularity_id
             FROM Events WHERE User_login = %s ORDER BY Start_time_and_date
         """, (current_user.user_login,))
 
         fetched_events = cur.fetchall()
         for event in fetched_events:
-            event_id, event_name, start_time, end_time, location, category, comment = event
+            event_id, event_name, start_time, end_time, location, category, comment, regularity_id = event
 
             # Преобразуем end_time в UTC, если он не имеет информации о часовом поясе
             if end_time.tzinfo is None:
@@ -279,7 +280,8 @@ def my_events():
                     "time": display_time,
                     "location": location,
                     "category": category,
-                    "comment": comment
+                    "comment": comment,
+                    "regularity_id": regularity_id
                 }
 
                 event_date = start_time.date()  # Получаем только дату из Start_time_and_date
@@ -289,8 +291,8 @@ def my_events():
 
         # Получение совместных событий
         cur.execute("""
-            SELECT se.Shared_event_name, se.Start_time_and_date, se.End_time_and_date, 
-                   se.Location, se.Category, se.Comment
+            SELECT se.Shared_event_ID, se.Shared_event_name, se.Start_time_and_date, se.End_time_and_date, 
+                   se.Location, se.Category, se.Comment, se.regularity_id
             FROM SharedEvents AS se
             INNER JOIN JointSharedEventParticipation AS jp ON se.Shared_event_ID = jp.Shared_event_ID
             WHERE jp.User_login = %s
@@ -300,7 +302,7 @@ def my_events():
         fetched_shared_events = cur.fetchall()
 
         for event in fetched_shared_events:
-            event_name, start_time, end_time, location, category, comment = event
+            event_id, event_name, start_time, end_time, location, category, comment, regularity_id = event
 
             # Форматируем даты и время для совместных событий
             if start_time.date() != end_time.date():
@@ -315,7 +317,8 @@ def my_events():
                 "time": display_time,
                 "location": location,
                 "category": category,
-                "comment": comment
+                "comment": comment,
+                "regularity_id": regularity_id
             }
 
             event_date = start_time.date()  # Получаем только дату
@@ -324,6 +327,7 @@ def my_events():
             # Пример проверки на существование записи
             if shared_event_entry not in events_by_date[event_date]:
                 events_by_date[event_date].append(shared_event_entry)
+
 
     except psycopg.Error as e:
         flash(f"Ошибка базы данных", "error")
