@@ -63,34 +63,70 @@
 
                                         <form action="{{ url_for('delete_event', event_id=event['id'], is_shared_event=event['is_shared_event']) }}" method="POST">
                                             {% if event['is_shared_event'] %} <!-- Проверка на совместное событие -->
+                                                <p>Выберите действие:</p>
+
+                                                <label>
+                                                    <input type="radio" name="delete_option" value="delete_for_self" checked> Удалить у себя
+                                                </label><br>
+                                                <label>
+                                                    <input type="radio" name="delete_option" value="delete_for_all"> Удалить для всех
+                                                </label><br>
+
+                                                <!--
+                                                <button type="button" onclick="showDeleteOptions('self')">Удалить только у себя</button>
+                                                <button type="button" onclick="showDeleteOptions('all')">Удалить для всех</button>
+
+                                                <div id="delete-options" style="display: none;">
                                                     <label>
-                                                        <input type="radio" name="delete_option" value="delete_for_self" checked> Удалить только у себя
-                                                    </label><br>
-                                                    <label>
-                                                        <input type="radio" name="delete_option" value="delete_for_self_single"> Удалить только это событие (совместное)
-                                                    </label><br>
-                                                    <label>
-                                                        <input type="radio" name="delete_option" value="delete_for_all" checked> Удалить для себя и для другого
+                                                        <input type="radio" name="delete_option" value="delete_for_self_single"> Удалить только это совместное событие (совместное)
                                                     </label><br>
                                                     <label>
                                                         <input type="radio" name="delete_option" value="delete_for_all_single"> Удалить только это событие (все повторяющиеся)
                                                     </label><br>
+                                                </div> -->
+
+                                                <script>
+                                                function showDeleteOptions(option) {
+                                                    const deleteOptionsDiv = document.getElementById('delete-options');
+                                                    deleteOptionsDiv.style.display = 'block';
+
+                                                    // Устанавливаем значение по умолчанию в зависимости от выбранной кнопки
+                                                    if (option === 'self') {
+                                                        document.querySelector('input[name="delete_option"][value="delete_for_self_single"]').checked = true;
+                                                        document.querySelector('input[name="delete_option"][value="delete_for_all_single"]').checked = false; // Снимаем выбор с этой опции
+                                                    } else if (option === 'all') {
+                                                        document.querySelector('input[name="delete_option"][value="delete_for_all_single"]').checked = true;
+                                                        document.querySelector('input[name="delete_option"][value="delete_for_self_single"]').checked = false; // Снимаем выбор с этой опции
+                                                    }
+                                                }
+                                                </script>
 
                                             {% else %}
-
                                                 {% if event['regularity_id'] is not none %}
                                                     <p>Вы уверены, что хотите удалить это событие?</p>
-
                                                     <label>
                                                         <input type="radio" name="delete_option" value="single" checked> Удалить это событие
                                                     </label><br>
                                                     <label>
                                                         <input type="radio" name="delete_option" value="all"> Удалить все повторяющиеся события
                                                     </label><br>
-
                                                 {% else %}
                                                     <p>Удалить это событие?</p>
                                                 {% endif %}
+
+                                                <script>
+                                                function showDeleteOptions(option) {
+                                                    const deleteOptionsDiv = document.getElementById('delete-options');
+                                                    deleteOptionsDiv.style.display = 'block';
+
+                                                    // Устанавливаем значение по умолчанию в зависимости от выбранной кнопки
+                                                    if (option === 'self') {
+                                                        document.querySelector('input[name="delete_option"][value="delete_for_self"]').checked = true;
+                                                    } else if (option === 'all') {
+                                                        document.querySelector('input[name="delete_option"][value="delete_for_all"]').checked = true;
+                                                    }
+                                                }
+                                                </script>
 
                                             {% endif %}
 
@@ -134,18 +170,5 @@ window.onclick = function(event) {
 
 </script>
 
-<script>
-function showDeleteOptions(option) {
-    const deleteOptionsDiv = document.getElementById('delete-options');
-    deleteOptionsDiv.style.display = 'block';
-
-    // Устанавливаем значение по умолчанию в зависимости от выбранной кнопки
-    if (option === 'self') {
-        document.querySelector('input[name="delete_option"][value="delete_for_self"]').checked = true;
-    } else if (option === 'all') {
-        document.querySelector('input[name="delete_option"][value="delete_for_all"]').checked = true;
-    }
-}
-</script>
 
 {% endblock %}

@@ -362,6 +362,7 @@ def delete_event(event_id):
 
             if is_shared_event:  # Это совместное событие
                 if delete_option == 'all':
+    # ____________________________________
                     # Удаляем все связанные совместные события
                     cur.execute("DELETE FROM JointSharedEventParticipation WHERE Shared_event_ID = %s", (event_id,))
                     cur.execute("DELETE FROM SharedEvents WHERE Shared_event_ID = %s", (event_id,))
@@ -371,6 +372,7 @@ def delete_event(event_id):
                     cur.execute("DELETE FROM JointSharedEventParticipation WHERE Shared_event_ID = %s AND User_login = %s",
                                (event_id, current_user.user_login))
                     flash("Совместное событие успешно удалено!", "success")
+    # ____________________________________
                 elif delete_option == 'delete_for_self':
                     # Удаляем только у себя из JointSharedEventParticipation
                     cur.execute("DELETE FROM JointSharedEventParticipation WHERE Shared_event_ID = %s AND User_login = %s",
@@ -380,6 +382,7 @@ def delete_event(event_id):
                     # Удаляем участие пользователя и другие записи
                     cur.execute("DELETE FROM JointSharedEventParticipation WHERE Shared_event_ID = %s", (event_id,))
                     flash("Вы удалили событие для себя и для остальных участников!", "success")
+
             else:  # Это обычное событие
                 cur.execute("SELECT Regularity_ID FROM Events WHERE Event_ID = %s", (event_id,))
                 regularity_id = cur.fetchone()
