@@ -236,12 +236,16 @@ def create_event():
 
     return render_template('create-event.html', active_page='my_events')
 
+ #_____ОТОБРАЖЕНИЕ ОБЫЧНЫХ СОБЫТИЙ СОВМЕЩЕННЫХ С СОВМЕСТНЫМИ СОБЫТИЯМИ______
 @app.route('/my-events')
 def my_events():
+
     conn = connect_to_db()
     events_by_date = {}
     cur = None
     current_time = datetime.now(pytz.utc)  # Получаем текущее время с часовым поясом UTC
+    is_shared_event = False  # Переменная для проверки наличия совместных событий
+
     try:
         cur = conn.cursor()
         event_id = None
@@ -281,7 +285,8 @@ def my_events():
                     "location": location,
                     "category": category,
                     "comment": comment,
-                    "regularity_id": regularity_id
+                    "regularity_id": regularity_id,
+                    "is_shared_event": False
                 }
 
                 event_date = start_time.date()  # Получаем только дату из Start_time_and_date
@@ -318,7 +323,8 @@ def my_events():
                 "location": location,
                 "category": category,
                 "comment": comment,
-                "regularity_id": regularity_id
+                "regularity_id": regularity_id,
+                "is_shared_event": True
             }
 
             event_date = start_time.date()  # Получаем только дату
@@ -338,39 +344,65 @@ def my_events():
 
     return render_template('my-events.html', active_page='my_events', events_by_date=events_by_date)
 
-
+#____УДАЛЕНИЕ И ОБЫЧНЫХ СОБЫТИЙ, И СОВМЕСТНЫХ_____
 @app.route('/events/delete/<int:event_id>', methods=['POST'])
 def delete_event(event_id):
     conn = connect_to_db()
     if conn:
         cur = conn.cursor()
         try:
-            # Получаем Regularity_ID события
-            cur.execute("SELECT Regularity_ID FROM Events WHERE Event_ID = %s", (event_id,))
-            regularity_id = cur.fetchone()
+            # Определяем событие совместное или нет
+            cur.execute(
+                "SELECT COUNT(*) FROM JointSharedEventParticipation WHERE Shared_event_ID = %s AND User_login = %s",
+                (event_id, current_user.user_login))
+            is_shared_event = cur.fetchone()[0] > 0  # Имеется ли запись в JointSharedEventParticipation с этим Shared_event_ID
 
-            if regularity_id:
-                regularity_id = regularity_id[0]
-                delete_option = request.form.get('delete_option')
+            regularity_id = None
+            delete_option = request.form.get('delete_option')
 
+            if is_shared_event:  # Это совместное событие
                 if delete_option == 'all':
-                    cur.execute("DELETE FROM Events WHERE Regularity_ID = %s", (regularity_id,))
-                    flash("Все повторяющиеся события успешно удалены!", "success")
+                    # Удаляем все связанные совместные события
+                    cur.execute("DELETE FROM JointSharedEventParticipation WHERE Shared_event_ID = %s", (event_id,))
+                    cur.execute("DELETE FROM SharedEvents WHERE Shared_event_ID = %s", (event_id,))
+                    flash("Все совместные события успешно удалены!", "success")
+                elif delete_option == 'single':
+                    # Удаляем само совместное событие
+                    cur.execute("DELETE FROM JointSharedEventParticipation WHERE Shared_event_ID = %s AND User_login = %s",
+                               (event_id, current_user.user_login))
+                    flash("Совместное событие успешно удалено!", "success")
+                elif delete_option == 'delete_for_self':
+                    # Удаляем только у себя из JointSharedEventParticipation
+                    cur.execute("DELETE FROM JointSharedEventParticipation WHERE Shared_event_ID = %s AND User_login = %s",
+                               (event_id, current_user.user_login))
+                    flash("Вы успешно удалили свое участие в совместном событии!", "success")
+                elif delete_option == 'delete_for_all':
+                    # Удаляем участие пользователя и другие записи
+                    cur.execute("DELETE FROM JointSharedEventParticipation WHERE Shared_event_ID = %s", (event_id,))
+                    flash("Вы удалили событие для себя и для остальных участников!", "success")
+            else:  # Это обычное событие
+                cur.execute("SELECT Regularity_ID FROM Events WHERE Event_ID = %s", (event_id,))
+                regularity_id = cur.fetchone()
+
+                if regularity_id:
+                    if delete_option == 'all':
+                        cur.execute("DELETE FROM Events WHERE Regularity_ID = %s", (regularity_id[0],))
+                        flash("Все повторяющиеся события успешно удалены!", "success")
+                    else:
+                        # Удаляем только это событие
+                        cur.execute("DELETE FROM Events WHERE User_login = %s AND Event_ID = %s",
+                                    (current_user.user_login, event_id))
+                        flash("Событие успешно удалено!", "success")
                 else:
-                    # Удаляем только это событие
+                    # Удаляем только это событие, если Regularity_ID нет
                     cur.execute("DELETE FROM Events WHERE User_login = %s AND Event_ID = %s",
                                 (current_user.user_login, event_id))
                     flash("Событие успешно удалено!", "success")
-            else:
-                # Удаляем только это событие, если Regularity_ID нет
-                cur.execute("DELETE FROM Events WHERE User_login = %s AND Event_ID = %s",
-                            (current_user.user_login, event_id))
-                flash("Событие успешно удалено!", "success")
 
             conn.commit()
         except psycopg.Error as e:
             conn.rollback()
-            flash(f"Ошибка базы данных", "error")
+            flash(f"Ошибка базы данных: {str(e)}", "error")
         finally:
             cur.close()
             conn.close()

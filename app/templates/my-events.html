@@ -61,18 +61,39 @@
                                     <div class="modal-header">Подтверждение удаления</div>
                                     <div class="modal-body">
 
-                                        <form action="{{ url_for('delete_event', event_id=event['id']) }}" method="POST">
-                                            {% if event['regularity_id'] is not none %}
-                                                <p>Вы уверены, что хотите удалить это событие?</p>
-                                                <label>
-                                                    <input type="radio" name="delete_option" value="single" checked> Удалить это событие
-                                                </label><br>
-                                                <label>
-                                                    <input type="radio" name="delete_option" value="all"> Удалить все повторяющиеся события
-                                                </label><br>
+                                        <form action="{{ url_for('delete_event', event_id=event['id'], is_shared_event=event['is_shared_event']) }}" method="POST">
+                                            {% if event['is_shared_event'] %} <!-- Проверка на совместное событие -->
+                                                    <label>
+                                                        <input type="radio" name="delete_option" value="delete_for_self" checked> Удалить только у себя
+                                                    </label><br>
+                                                    <label>
+                                                        <input type="radio" name="delete_option" value="delete_for_self_single"> Удалить только это событие (совместное)
+                                                    </label><br>
+                                                    <label>
+                                                        <input type="radio" name="delete_option" value="delete_for_all" checked> Удалить для себя и для другого
+                                                    </label><br>
+                                                    <label>
+                                                        <input type="radio" name="delete_option" value="delete_for_all_single"> Удалить только это событие (все повторяющиеся)
+                                                    </label><br>
+
                                             {% else %}
-                                                <p>Удалить это событие?</p>
+
+                                                {% if event['regularity_id'] is not none %}
+                                                    <p>Вы уверены, что хотите удалить это событие?</p>
+
+                                                    <label>
+                                                        <input type="radio" name="delete_option" value="single" checked> Удалить это событие
+                                                    </label><br>
+                                                    <label>
+                                                        <input type="radio" name="delete_option" value="all"> Удалить все повторяющиеся события
+                                                    </label><br>
+
+                                                {% else %}
+                                                    <p>Удалить это событие?</p>
+                                                {% endif %}
+
                                             {% endif %}
+
                                             <div class="modal-buttons">
                                                 <button type="button" class="modal-close" onclick="closeModal({{ event['id'] }})">Отмена</button>
                                                 <button type="submit" class="modal-submit">Подтвердить удаление</button>
@@ -108,6 +129,21 @@ function closeModal(eventId) {
 window.onclick = function(event) {
     if (event.target.classList.contains('modal')) {
         closeModal(event.target.id.replace('modal', ''));
+    }
+}
+
+</script>
+
+<script>
+function showDeleteOptions(option) {
+    const deleteOptionsDiv = document.getElementById('delete-options');
+    deleteOptionsDiv.style.display = 'block';
+
+    // Устанавливаем значение по умолчанию в зависимости от выбранной кнопки
+    if (option === 'self') {
+        document.querySelector('input[name="delete_option"][value="delete_for_self"]').checked = true;
+    } else if (option === 'all') {
+        document.querySelector('input[name="delete_option"][value="delete_for_all"]').checked = true;
     }
 }
 </script>
