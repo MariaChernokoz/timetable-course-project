@@ -433,7 +433,7 @@ def edit_event(event_id):
             is_regular = request.form.get("is_regular")  # Чекбокс: регулярное событие или нет
             regularity_interval = request.form.get("regularity_interval")
             days_of_week = request.form.get("days_of_week")
-            end_repeat = request.form.get("end_repeat")  # Дата окончания повторений
+            end_repeat_str = request.form.get("end_repeat")  # Дата окончания повторений
 
             user_timezone = pytz.timezone('Europe/Moscow')  # Замените на нужный вам часовой пояс
 
@@ -441,9 +441,14 @@ def edit_event(event_id):
                 event_start_time = user_timezone.localize(datetime.strptime(event_start_time_str, "%Y-%m-%dT%H:%M"))
                 event_end_time = user_timezone.localize(datetime.strptime(event_end_time_str, "%Y-%m-%dT%H:%M"))
 
+                if end_repeat_str:
+                    end_repeat = user_timezone.localize(datetime.strptime(end_repeat_str, "%Y-%m-%dT%H:%M"))
+                else:
+                    end_repeat = None
+
                 if is_regular:
                     # Проверка: не ранее ли дата и время конца события
-                    if end_repeat < event_end_time:
+                    if end_repeat and end_repeat < event_end_time:
                         flash("Конец повторений должен быть позже времени окончания события.", "error")
                         return redirect(url_for("edit_event", event_id=event_id))
 
@@ -478,7 +483,6 @@ def edit_event(event_id):
                         WHERE Event_ID = %s AND User_login = %s
                     """, (event_name, event_category, event_start_time, event_end_time, event_location,
                           event_comment, event_id, current_user.user_login))
-
                 conn.commit()
                 flash("Событие успешно обновлено!", "success")
             except ValueError:

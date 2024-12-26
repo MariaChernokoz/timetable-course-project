@@ -58,8 +58,8 @@
 
                         <!-- Кнопка для открытия модального окна -->
                         {% if event['id'] is defined %}
-                            <a href="{{ url_for('edit_event', event_id=event['id']) }}" class="task-button">Ред</a>
-                            <button onclick="openModal({{ event['id'] }})" class="task-button">Удалить</button>
+                            <a href="{{ url_for('edit_event', event_id=event['id']) }}" class="task-button">ред</a>
+                            <button onclick="openModal({{ event['id'] }})" class="task-button">Х</button>
                         {% endif %}
 
                         <!-- Модальное окно -->
