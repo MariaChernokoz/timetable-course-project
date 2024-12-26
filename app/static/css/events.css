@@ -46,7 +46,9 @@
     width: fit-content; /* Ширина кнопки подстраивается под содержимое */
     display: block; /* Убедитесь, что кнопка является блочным элементом для центрирования */
 }
-
+.add-task-button:hover {
+background-color: #800000;
+}
 
 .messages-list {
     list-style: none;
@@ -175,6 +177,10 @@ h1, h2 {
     position: relative;
     text-decoration: none; /* Убирает подчеркивание */
     /* top: -5px; /* Поднимет кнопку немного вверх относительно рамки */
+}
+
+.task-button:hover{
+      background-color: #404040;
 }
 
 .alert {

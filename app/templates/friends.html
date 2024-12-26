@@ -53,8 +53,8 @@
                 <div class="friend-info">
                     <span class="friend-name">{{ friend[0] }}</span>
                     <div class="button-container">
-                        <form action="{{ url_for('remove_friend', friend_login=friend[0]) }}" method="POST" style="display:inline;">
-                            <button class="delete-button" type="submit">Удалить друга</button>
+                        <form action="{{ url_for('remove_friend', friend_login=friend[0]) }}" method="POST" class="delete-button" style="display:inline;">
+                            <button class="delete-button remove-friend-button" type="submit">Удалить друга</button>
                         </form>
                         <form action="{{ url_for('view_friend_events', friend_username=friend[0]) }}" method="GET" style="display:inline;">
                             <button class="view-button" type="submit">Посмотреть события</button>
@@ -67,6 +67,51 @@
             <li class="friend-item friend-empty">У вас нет друзей.</li>
         {% endif %}
     </ul>
+
+    <!-- Окно подтверждения удаления (ранее "модальное") -->
+    <div id="confirmOverlay" class="confirmation-overlay" style="display: none;">
+        <div class="confirmation-container">
+            <h2 class="confirmation-title">Подтверждение удаления</h2>
+            <p class="confirmation-text">Удалить друга?</p>
+            <div class="confirmation-buttons">
+                <button type="button" id="cancelDelete" class="confirmation-button cancel-button">Нет</button>
+                <button type="button" id="confirmDelete" class="confirmation-button confirm-button">Да</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+         document.addEventListener('DOMContentLoaded', function() {
+            const confirmationButtons = document.querySelectorAll('.remove-friend-button'); // объединенный селектор для кнопок
+            const confirmOverlay = document.getElementById('confirmOverlay');
+            const confirmActionButton = document.getElementById('confirmDelete'); //  универсальная кнопка для подтверждения
+            const cancelActionButton = document.getElementById('cancelDelete');  // универсальная кнопка для отмены
+
+             let currentForm;
+
+             confirmationButtons.forEach(button => {
+                  button.addEventListener('click', function(event) {
+                       event.preventDefault();
+                       currentForm = this.closest('form');
+                       confirmOverlay.style.display = 'flex';
+                  });
+             });
+
+
+             confirmActionButton.addEventListener('click', function() {
+                   confirmOverlay.style.display = 'none';
+                   if (currentForm) {
+                        currentForm.submit();
+                   }
+             });
+
+             cancelActionButton.addEventListener('click', function() {
+                        confirmOverlay.style.display = 'none';
+             });
+         });
+
+    </script>
 
 </div>
 {% endblock %}

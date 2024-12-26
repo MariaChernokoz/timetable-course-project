@@ -412,11 +412,6 @@ def delete_event(event_id):
 
     return redirect(url_for('my_events'))
 
-
-from datetime import datetime
-import pytz
-
-
 @app.route('/edit-event/<int:event_id>', methods=["GET", "POST"])
 def edit_event(event_id):
     conn = connect_to_db()

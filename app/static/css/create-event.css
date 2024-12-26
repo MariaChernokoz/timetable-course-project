@@ -249,6 +249,10 @@ h1, h2 {
     display: block;
 }
 
+.create-event-button:hover {
+    background-color: #800000; /* Цвет фона при наведении */
+}
+
 .back-button {
     background-color: #404040; /* Цвет фона */
     color: #fff; /* Цвет текста */
@@ -264,7 +268,7 @@ h1, h2 {
 }
 
 .back-button:hover {
-    background-color: #606060; /* Цвет фона при наведении */
+    background-color: #800000; /* Цвет фона при наведении */
 }
 
 .flash-messages {

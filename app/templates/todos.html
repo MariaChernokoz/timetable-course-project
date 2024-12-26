@@ -7,11 +7,12 @@
         <h1>Список дел</h1>
         <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/todos.css') }}">
+
         <ul class="task-list">
             {% for task in tasks %}
             <li class="task-item">
                 <form action="{{ url_for('delete_task', taskid=task[0]) }}" method="POST" class="task-form">
-                    <button type="submit" class="task-button delete-task-button" onclick="return confirm('Вы уверены, что хотите удалить эту задачу?');">Выполнено</button>
+                    <button type="button" class="task-button delete-task-button">Выполнено</button>
                 </form>
                 <div class="task-info">
                     <strong class="task-name">{{ task[1] }}</strong>
@@ -30,6 +31,51 @@
             <li class="task-empty">Задачи отсутствуют.</li>
             {% endfor %}
         </ul>
+
+        <!-- Окно подтверждения удаления (ранее "модальное") -->
+        <div id="confirmOverlay" class="confirmation-overlay" style="display: none;">
+            <div class="confirmation-container">
+                 <h2 class="confirmation-title">Подтверждение удаления</h2>
+                <p class="confirmation-text">Удалить задачу?</p>
+                 <div class="confirmation-buttons">
+                    <button type="button" id="cancelDelete" class="confirmation-button cancel-button">Нет</button>
+                   <button type="button" id="confirmDelete" class="confirmation-button confirm-button">Да</button>
+                </div>
+            </div>
+        </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const deleteButtons = document.querySelectorAll('.delete-task-button');
+            const confirmOverlay = document.getElementById('confirmOverlay');
+            const confirmDeleteButton = document.getElementById('confirmDelete');
+            const cancelDeleteButton = document.getElementById('cancelDelete');
+
+            let currentForm;
+
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    currentForm = this.closest('form');
+                    confirmOverlay.style.display = 'flex';
+                });
+            });
+
+            confirmDeleteButton.addEventListener('click', function() {
+                confirmOverlay.style.display = 'none';
+                if (currentForm) {
+                    currentForm.submit();
+                }
+            });
+
+            cancelDeleteButton.addEventListener('click', function() {
+                confirmOverlay.style.display = 'none';
+            });
+        });
+    </script>
+
+
         <button id="addTaskBtn" class="add-task-button">Добавить новое</button>
     </div>
 
@@ -53,6 +99,7 @@
             </form>
         </div>
     </div>
+
 
     {% if error %}
         <p class="danger">{{ error }}</p>

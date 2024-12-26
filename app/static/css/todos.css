@@ -55,6 +55,10 @@
     border-radius: 5px;
 }
 
+.task-button:hover {
+    background-color: #404040; /* Цвет фона при наведении */
+}
+
 .task-empty {
     text-align: center;
     font-style: italic;
@@ -72,6 +76,10 @@
     align-self: center;
     box-sizing: border-box;
     width: fit-content;
+}
+
+.add-task-button:hover {
+    background-color: #800000; /* Цвет фона при наведении */
 }
 
 .modal {
@@ -194,15 +202,71 @@
     margin-left: 15px;
 }
 
-.task-info {
+
+.confirmation-overlay {
+    position: fixed; /* Зафиксированное положение */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Полупрозрачный фон */
     display: flex;
-    flex-direction: column;
-    justify-content: center; /* Вертикальное выравнивание */
-    flex-grow: 1; /* Позволяет контейнеру занимать оставшееся пространство */
-    position: relative; /* Чтобы элементы внутри могли быть абсолютно позиционированы если необходимо */
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Поверх всех элементов */
+}
+.confirmation-container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+     width: 400px; /* устанавливаем ширину контейнера */
+    max-width: 90%; /* устанавливаем максимальную ширину, чтобы на маленьких экранах не был слишком большим */
+
 }
 
-.task-tooltip-container {
+
+.confirmation-title {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-bottom: 10px;
+     font-family: 'Montserrat', sans-serif;
+}
+
+.confirmation-text {
+    margin-bottom: 20px;
+    /* font-family: 'Roboto', sans-serif; */
+}
+.confirmation-radio {
+        margin-bottom: 10px;
+      /* font-family: 'Roboto', sans-serif; */
+}
+
+.confirmation-buttons {
     display: flex;
-    justify-content: flex-end; /* Выравнивает элементы по правому краю */
+    justify-content: flex-end; /* Выравниваем кнопки по правому краю */
+     gap: 10px; /* отступы между кнопками */
+}
+.confirmation-button {
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    border: none;
+    /*font-family: 'Roboto', sans-serif; */
+     font-size: 1em;
+}
+.cancel-button{
+  background-color: #804040;
+    color: #fff;
+}
+.cancel-button:hover{
+      background-color: ##804040;
+}
+.confirm-button {
+    background-color: #804040;
+    color: white;
+}
+.confirm-button:hover {
+        background-color: #804040; /* темный сюдаааааа*/
+
 }
