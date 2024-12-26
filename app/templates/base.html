@@ -9,24 +9,62 @@
 <body>
     <div class="container">
         <div class="header">
-            <ul class="nav nav-pills">
-                <li class="nav-item"><a href="{{ url_for('my_events') }}" class="nav-link {% if active_page == 'my_events' %} active {% endif %}">Мои события</a></li>
-                <li class="nav-item"><a href="{{ url_for('friends') }}" class="nav-link {% if active_page == 'friends' %} active {% endif %}">Друзья</a></li>
-                <li class="nav-item"><a href="{{ url_for('friendsrequests') }}" class="nav-link {% if active_page == 'friendsrequests' %} active {% endif %}">Заявки в друзья</a></li>
-                <li class="nav-item"><a href="{{ url_for('todos') }}" class="nav-link {% if active_page == 'todos' %} active {% endif %}">Список дел</a></li>
-                <li class="nav-item"><a href="{{ url_for('shared_events') }}" class="nav-link {% if active_page == 'shared_events' %} active {% endif %}">Запросы на совместные события</a></li>
-            </ul>
-            {% if current_user.is_authenticated %}
-                <div class="user-info">
-                    <span>{{ current_user.user_login }}</span>
-                    <button class="logout-button"><a href="{{ url_for('logout') }}">Выход</a></button>
+            <nav class="nav nav-pills">
+               <div class="nav-row">
+                <a href="{{ url_for('my_events') }}" class="nav-link {% if active_page == 'my_events' %} active {% endif %}">Мои события</a>
+                <a href="{{ url_for('friends') }}" class="nav-link {% if active_page == 'friends' %} active {% endif %}">Друзья</a>
+                 <a href="{{ url_for('todos') }}" class="nav-link {% if active_page == 'todos' %} active {% endif %}">Список дел</a>
+
+               </div>
+               <div class="nav-row">
+                <a href="{{ url_for('friendsrequests') }}" class="nav-link {% if active_page == 'friendsrequests' %} active {% endif %}">Заявки в друзья</a>
+                 <a href="{{ url_for('shared_events') }}" class="nav-link {% if active_page == 'shared_events' %} active {% endif %}" >Запросы на совместные события</a>
                 </div>
-            {% endif %}
+                  {% if current_user.is_authenticated %}
+                  <div class="user-info">
+                        <span>{{ current_user.user_login }}</span>
+                        <button class="logout-button"><a href="{{ url_for('logout') }}">Выход</a></button>
+                    </div>
+                    {% endif %}
+
+            </nav>
         </div>
     </div>
     <div class="container">
     {% block content %}
-            <!DOCTYPE html>
+             <!-- Заголовок страницы-->
+         <h1 class="welcome-text">Добро пожаловать в расписание!</h1>
+
+
+        <!-- Инструкции с подсказками  -->
+          <div class="instructions">
+
+                <div class="instruction-bubble">
+                      Смотрите своё расписание и создавайте новые события
+                </div>
+
+
+                  <div class="instruction-bubble">
+                            Добавляйте новых друзей и просматривайте их свободное время, а также создавайте совместные события с друзьями
+                  </div>
+
+                <div class="instruction-bubble">
+                      Заполняйте список дел актуальными задачами на ближайшее время
+                </div>
+
+               <div class="instruction-bubble">
+                       Проверяйте поступающие заявки в друзья и отслеживайте состояние отправленных
+                </div>
+
+                <div class="instruction-bubble">
+                      Отслеживайте состояние отправленных заявок на совместные события и просматривайте полученные запросы
+                </div>
+
+                <div class="instruction-bubble">
+                    Всегда можете посмотреть имя своего аккаунта и выйти при необходимости
+                </div>
+
+        <!-- <!DOCTYPE html>
                 <html lang="ru">
                 <head>
                     <meta charset="UTF-8">
@@ -39,7 +77,8 @@
                         <img src="/static/img/main.png" alt="Изображение" class="responsive-img">
                     </div>
                 </body>
-                </html>
+                </html>-->
+              </div>
         {% endblock %}
     </div>
 

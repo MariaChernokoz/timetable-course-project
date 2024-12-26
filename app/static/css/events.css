@@ -128,14 +128,18 @@ h1, h2 {
 }
 
 .task-category.Учёба {
-    background-color: #ed5a6b;
+    background-color: #A2A2D0;
     color: #fff;
 }
 
 .task-category.---------- {
-    color: #fff;
+    color: #f0f0f0;
 }
 
+.task-category.Совместное {
+    background-color: #E4717A;
+    color: #fff;
+}
 
 .task-item {
     display: flex;
