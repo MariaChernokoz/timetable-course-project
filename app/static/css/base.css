@@ -3,25 +3,27 @@
     margin: 0 auto;
     padding: 0 15px;
 }
-
 .header {
     display: flex;
-    justify-content: space-between;
+    justify-content: center; /* Центрируем header */
     align-items: center;
     padding: 10px;
-    background-color: #f8f9fa;
-}
+    background-color: #f0f0f0;
+    margin-top: 20px; /* Отступ сверху */
+    position: relative;
 
+}
 .nav {
     display: flex; /* Изменили: убрали flex-wrap */
     gap: 20px;
     list-style-type: none; /* Убираем маркеры списка */
     padding: 0; /* Убираем отступы у списка */
     margin: 0; /* Убираем отступы у списка */
+    justify-content: center; /* Центрируем кнопки в строке */
 }
 
 .nav-link {
-    color: #dc3545;
+    color: #800000;
     border-radius: 5px;
     font-size: 1rem;
     padding: 10px 15px; /* Добавим отступы для кнопок */
@@ -29,25 +31,21 @@
     text-decoration: none; /* Убирать подчеркивание */
     font-family: sans-serif;
 }
-
 .nav-link:hover {
     color: #800000;
     background-color: rgba(220, 53, 69, 0.1) /* при наведении */
 }
-
 .nav-link.active {
     background-color: #800000;
     color: #f8f9fa;
     border: 1px solid #800000;
 }
-
 .user-info {
     display: flex;
     align-items: center;
     gap: 10px;
     font-family: sans-serif;
 }
-
 .logout-button {
     padding: 5px 10px;
     background-color: #333;
@@ -56,16 +54,36 @@
     border-radius: 5px;
     cursor: pointer;
 }
-
 .logout-button a {
     color: white;
     text-decoration: none;
 }
-
 /* Медиа-запрос для уменьшения шрифта на узких экранах */
 @media (max-width: 1000px) {
+  .header {
+        display: flex;
+          /*flex-direction: column; /* Переход на многострочное отображение */
+          justify-content: center; /* Центрируем header */
+        }
+    .nav-row {
+       display: flex;
+        flex-wrap: wrap;
+        justify-content: center; /* Выравнивание по центру для многострочной навигации */
+
+    }
+
+
     .nav-link {
         font-size: 0.8rem;
+           box-sizing: border-box; /* Запрещаем padding добавляться к ширине */
+           text-align: center;
+
+    }
+
+      .user-info {
+       margin-top: 10px; /* добавляет отступ сверху */
+        margin-left: 0; /* Отменяем отступ слева */
+
     }
     .user-info span {
         font-size: 0.9rem;
@@ -84,13 +102,72 @@ body, html {
     height: 100%;
 }
 
+           /* Стили для навигации и страницы */
+            body {
+
+                  background-color: #f0f0f0;
+            }
+
+
+             .welcome-text {
+               font-size: 3em;
+              font-weight: bold;
+              margin-bottom: 20px;
+              color: #333;
+                text-align: center;
+            }
+
+            .instructions {
+               display: flex;
+               flex-direction: column;
+               align-items: center;
+               gap: 30px;
+               margin-top: 20px;
+
+            }
+
+            .instruction-bubble {
+              padding: 10px 20px;
+              background-color: white;
+              border-radius: 15px;
+              max-width: 500px;
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+              text-align: center;
+            }
+
+
+.instructions {
+               display: flex;
+               flex-direction: column;
+               align-items: center;
+               gap: 30px;
+               margin-top: 20px;
+
+            }
+
+            .instruction-bubble {
+              padding: 10px 20px;
+              background-color: white;
+              border-radius: 15px;
+              max-width: 500px;
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+              text-align: center;
+            }
+
 .container {
+    max-width: 1200px; /* Максимальная ширина контейнера */
+    margin: 0 auto; /* Центрирование контейнера */
+    padding: 0 15px; /* Отступы по бокам */
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 15px;
 }
 
 .fullscreen-image {
+    background-image: url('app/static/img/main.png');
+    background-size: cover; /* Растянуть изображение */
+    background-position: center; /* Центрировать изображение */
+    height: 400px; /* Высота изображения, можно изменить по желанию */
     background-image: url('/static/img/main.png');
     background-size: contain; /* Сохраняет пропорции изображения и полностью помещает его в контейнер */
     background-position: center top; /* Центрирует изображение по горизонтали и прижимает к верхней части */
