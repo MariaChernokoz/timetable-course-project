@@ -31,6 +31,8 @@
     transition: color 0.3s ease, background-color 0.3s ease; /* Плавный переход для фона */
     text-decoration: none; /* Убирать подчеркивание */
     font-family: sans-serif;
+    position: relative; /* Устанавливаем относительное позиционирование */
+    top: 5px; /* Сдвигаем кнопку вверх */
 }
 .nav-link:hover {
     color: #800000;
@@ -83,6 +85,9 @@
         font-size: 0.8rem;
            box-sizing: border-box; /* Запрещаем padding добавляться к ширине */
            text-align: center;
+           position: relative; /* Устанавливаем относительное позиционирование */
+            top: -10px; /* Сдвигаем кнопку вверх */
+
 
     }
 
