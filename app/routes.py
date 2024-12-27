@@ -238,6 +238,10 @@ def create_event():
 
     return render_template('create-event.html', active_page='my_events')
 
+import datetime
+from datetime import datetime
+import pytz
+from datetime import datetime, timedelta
 
 #_____ОТОБРАЖЕНИЕ ОБЫЧНЫХ СОБЫТИЙ СОВМЕЩЕННЫХ С СОВМЕСТНЫМИ СОБЫТИЯМИ______
 @app.route('/my-events')
@@ -246,10 +250,12 @@ def my_events():
     conn = connect_to_db()
     events_by_date = {}
     cur = None
+    participant = None
+    is_shared_event = False
     user_timezone = pytz.timezone('Europe/Moscow')
     current_time = datetime.now(user_timezone)  # Теперь это offset-aware время
     #current_time = datetime.datetime.now()  # Получаем текущее время с часовым поясом UTC
-    is_shared_event = False  # Переменная для проверки наличия совместных событий
+    #is_shared_event = False  # Переменная для проверки наличия совместных событий
 
     try:
         cur = conn.cursor()
@@ -298,7 +304,8 @@ def my_events():
                     "category": category,
                     "comment": comment,
                     "regularity_id": regularity_id,
-                    "is_shared_event": False
+                    "is_shared_event": False,
+                    "user-login": participant
                 }
 
                 event_date = start_time.date()  # Получаем только дату из Start_time_and_date
@@ -332,6 +339,17 @@ def my_events():
             else:
                 end_time = end_time.astimezone(user_timezone)
 
+            # Получение 'совместно с ...'
+            cur.execute("""
+                SELECT User_login
+                FROM JointSharedEventParticipation AS jp 
+                WHERE jp.Shared_event_ID = %s AND User_login != %s
+            """, (event_id, current_user.user_login))
+
+            participants = cur.fetchall()
+            # Преобразуем список участников в простой список строк
+            participant_usernames = [row[0] for row in participants]
+
             # Проверяем, прошел ли уже срок события
             if end_time < current_time:
                 # Удаляем событие из базы данных, если оно прошло
@@ -354,7 +372,8 @@ def my_events():
                     "category": category,
                     "comment": comment,
                     "regularity_id": regularity_id,
-                    "is_shared_event": True
+                    "is_shared_event": True,
+                    "user-login": participant_usernames  # Передаем список участников
                 }
 
                 event_date = start_time.date()  # Получаем только дату
@@ -447,6 +466,10 @@ def edit_event(event_id):
     conn = connect_to_db()
     if conn:
         cur = conn.cursor()
+        participant = None
+        is_shared_event = False
+        user_timezone = pytz.timezone('Europe/Moscow')
+        current_time = datetime.now(user_timezone)
         if request.method == 'POST':
             # Получаем данные из формы
             event_name = request.form.get('event_name')
@@ -460,11 +483,12 @@ def edit_event(event_id):
             days_of_week = request.form.get("days_of_week")
             end_repeat_str = request.form.get("end_repeat")  # Дата окончания повторений
 
-            user_timezone = pytz.timezone('Europe/Moscow')  # Замените на нужный вам часовой пояс
+            #user_timezone = pytz.timezone('Europe/Moscow')  # Замените на нужный вам часовой пояс
 
             try:
                 event_start_time = user_timezone.localize(datetime.strptime(event_start_time_str, "%Y-%m-%dT%H:%M"))
                 event_end_time = user_timezone.localize(datetime.strptime(event_end_time_str, "%Y-%m-%dT%H:%M"))
+
 
                 if end_repeat_str:
                     end_repeat = user_timezone.localize(datetime.strptime(end_repeat_str, "%Y-%m-%dT%H:%M"))
@@ -525,20 +549,52 @@ def edit_event(event_id):
             cur.execute("""
                 SELECT Event_name, Category, Start_time_and_date, End_time_and_date, Location, Comment, Regularity_ID
                 FROM Events WHERE Event_ID = %s
-            """, (event_id,))
+                """, (event_id,))
+
             event = cur.fetchone()
-            if event:
-                # Получим данные регулярности, если они есть
-                if event[6]:  # Если Regularity_ID существует
+
+            if event:  # Проверяем, существует ли событие
+                event_name, category, start_time, end_time, location, comment, regularity_id = event
+
+                # Преобразуем start_time и end_time в часовой пояс пользователя
+                if start_time.tzinfo is None:
+                    start_time = start_time.replace(tzinfo=pytz.utc).astimezone(user_timezone)
+                else:
+                    start_time = start_time.astimezone(user_timezone)
+
+                if end_time.tzinfo is None:
+                    end_time = end_time.replace(tzinfo=pytz.utc).astimezone(user_timezone)
+                else:
+                    end_time = end_time.astimezone(user_timezone)
+
+                # Проверяем, прошел ли уже срок события
+                if end_time < current_time:
+                    # Удаляем событие из базы данных, если оно прошло
+                    cur.execute("DELETE FROM Events WHERE Event_ID = %s AND User_login = %s",
+                                (event_id, current_user.user_login))
+                    conn.commit()
+                    flash("Событие было удалено, так как оно прошло!", "info")
+                    return redirect(url_for('my_events'))
+
+                # Форматируем даты и время
+                if start_time.date() != end_time.date():
+                    display_time = f"{start_time.strftime('%Y-%m-%d')} {start_time.strftime('%H:%M')} - " \
+                                   f"{end_time.strftime('%Y-%m-%d')} {end_time.strftime('%H:%M')}"
+                else:
+                    display_time = f"{start_time.strftime('%H:%M')} - {end_time.strftime('%H:%M')}"
+
+                # Получаем данные регулярности, если они есть
+                if regularity_id:  # Если Regularity_ID существует
                     cur.execute("""
-                        SELECT Regularity_interval, Days_of_week, End_date
-                        FROM Regularity WHERE Regularity_ID = %s
-                    """, (event[6],))
+                            SELECT Regularity_interval, Days_of_week, End_date
+                            FROM Regularity WHERE Regularity_ID = %s
+                        """, (regularity_id,))
                     regularity = cur.fetchone()
                 else:
                     regularity = None
 
-                return render_template('edit-event.html', event=event, regularity=regularity)
+                return render_template('edit-event.html', event=event, regularity=regularity, display_time=display_time)
+
             else:
                 flash("Событие не найдено!", "error")
                 return redirect(url_for('my_events'))
@@ -1012,28 +1068,28 @@ def request_shared_event(recipient_login):
         # Проверка обязательных полей
         if not event_name or not start_time or not end_time:
             flash("Пожалуйста, заполните все обязательные поля.", "error")
-            return redirect(url_for("create_shared_event"))
+            return redirect(url_for("request_shared_event", recipient_login=recipient_login))
 
         # Проверка форматирования дней недели
         if days_of_week and not all(day in '1234567' for day in days_of_week):
             flash("Некорректный формат дней недели. Используйте только цифры от 1 до 7.", "error")
-            return redirect(url_for("create_shared_event"))
+            return redirect(url_for("request_shared_event", recipient_login=recipient_login))
 
         # Проверка длины названия события
         if event_name and len(event_name) > 30:
             flash("Название события не должно превышать 30 символов.", "error")
-            return redirect(url_for("create_event"))
+            return redirect(url_for("request_shared_event", recipient_login=recipient_login))
 
         # Проверка длины места
         if location and len(location) > 30:
             flash("Место не должно превышать 30 символов.", "error")
-            return redirect(url_for("create_event"))
+            return redirect(url_for("request_shared_event", recipient_login=recipient_login))
 
 
         # Проверка длины комментария
         if comment and len(comment) > 30:
             flash("Комментарий не должен превышать 30 символов.", "error")
-            return redirect(url_for("create_shared_event"))
+            return redirect(url_for("request_shared_event", recipient_login=recipient_login))
 
         try:
             start_time = datetime.strptime(start_time, "%Y-%m-%dT%H:%M")
@@ -1044,14 +1100,14 @@ def request_shared_event(recipient_login):
             # Проверка, не находится ли время в прошлом и время окончания больше времени начала
             if start_time < datetime.now():
                 flash("Время начала не может быть в прошлом.", "error")
-                return redirect(url_for("create_shared_event"))
+                return redirect(url_for("request_shared_event", recipient_login=recipient_login))
             if end_time <= start_time:
                 flash("Время окончания должно быть позже времени начала.", "error")
-                return redirect(url_for("create_shared_event"))
+                return redirect(url_for("request_shared_event", recipient_login=recipient_login))
 
         except ValueError:
             flash("Некорректный формат даты и времени.", "error")
-            return redirect(url_for("create_shared_event"))
+            return redirect(url_for("request_shared_event", recipient_login=recipient_login))
 
         conn = connect_to_db()
 
