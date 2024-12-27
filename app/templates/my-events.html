@@ -61,8 +61,10 @@
                         </div>
 
                         <!-- Кнопка для открытия модального окна -->
-                        {% if event['id'] is defined %}
-                            <a href="{{ url_for('edit_event', event_id=event['id']) }}" class="task-button">ред</a>
+                        {% if event['id'] is defined%}
+                             {% if not event['is_shared_event']%}
+                                <a href="{{ url_for('edit_event', event_id=event['id']) }}" class="task-button">ред</a>
+                            {% endif %}
                             <button onclick="openModal({{ event['id'] }})" class="task-button">Х</button>
                         {% endif %}
 

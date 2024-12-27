@@ -238,11 +238,7 @@ def create_event():
 
     return render_template('create-event.html', active_page='my_events')
 
-import datetime
-from datetime import datetime
-import pytz
-from datetime import datetime, timedelta
-#
+
 #_____ОТОБРАЖЕНИЕ ОБЫЧНЫХ СОБЫТИЙ СОВМЕЩЕННЫХ С СОВМЕСТНЫМИ СОБЫТИЯМИ______
 @app.route('/my-events')
 def my_events():
