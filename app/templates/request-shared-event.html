@@ -4,6 +4,7 @@
 
 {% block content %}
     <h1 class="event-title">Создать новое совместное событие</h1>
+    <a href="{{ url_for('my_events') }}" class="back-button">Вернуться к просмотру событий друга</a>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/shared-events.css') }}">
     <div class="event-form-container">
         <form method="POST">
@@ -79,7 +80,16 @@
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             var now = new Date();
-            var currentDateTime = now.toISOString().slice(0, 16);
+
+            // Получаем локальное время
+            var year = now.getFullYear();
+            var month = String(now.getMonth() + 1).padStart(2, '0'); // Месяцы начинаются с 0
+            var date = String(now.getDate()).padStart(2, '0');
+            var hours = String(now.getHours()).padStart(2, '0');
+            var minutes = String(now.getMinutes()).padStart(2, '0');
+
+            // Форматируем строку в нужный формат
+            var currentDateTime = ${year}-${month}-${date}T${hours}:${minutes};
             document.getElementById('start_time').setAttribute('min', currentDateTime);
             document.getElementById('end_time').setAttribute('min', currentDateTime);
             document.getElementById('start_time').value = currentDateTime;
