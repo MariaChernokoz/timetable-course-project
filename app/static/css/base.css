@@ -15,7 +15,7 @@
 
 }
 .nav {
-    display: flex; /* Изменили: убрали flex-wrap */
+    display: flex;
     gap: 20px;
     list-style-type: none; /* Убираем маркеры списка */
     padding: 0; /* Убираем отступы у списка */

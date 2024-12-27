@@ -454,7 +454,7 @@ def delete_event(event_id):
             conn.commit()
         except psycopg.Error as e:
             conn.rollback()
-            flash(f"Ошибка базы данных: {str(e)}", "error")
+            flash(f"Ошибка базы данных", "error")
         finally:
             cur.close()
             conn.close()
@@ -538,7 +538,7 @@ def edit_event(event_id):
                 flash("Некорректный формат даты и времени.", "error")
             except psycopg.Error as e:
                 conn.rollback()
-                flash(f"Ошибка базы данных: {str(e)}", "error")
+                flash(f"Ошибка базы данных", "error")
             finally:
                 cur.close()
                 conn.close()
@@ -638,7 +638,7 @@ def todos():
                 return redirect(url_for('todos'))
             except psycopg.Error as e:
                 conn.rollback()
-                flash(f"Ошибка базы данных: {e}", "error")
+                flash(f"Ошибка базы данных", "error")
             finally:
                 cur.close()
                 conn.close()
@@ -1037,7 +1037,7 @@ def view_friend_events(friend_username):
                 events_by_date[event_date].append(event_with_time_display)  # Добавляем обновленный элемент события
 
     except psycopg.Error as e:
-        flash(f"Ошибка базы данных: {e}", "error")
+        flash(f"Ошибка базы данных", "error")
     finally:
         if cur:
             cur.close()
@@ -1176,7 +1176,7 @@ def request_shared_event(recipient_login):
 
         except psycopg.Error as e:
             conn.rollback()
-            flash(f"Ошибка базы данных при создании события: {e}", "error")
+            flash(f"Ошибка базы данных при создании события", "error")
             return redirect(url_for("friends"))  # Перенаправление на страницу со списком событий
 
         finally:
@@ -1238,7 +1238,7 @@ def shared_events():
 
             cur.close()
     except Exception as e:
-        flash(f"Ошибка при получении данных: {e}", "error")
+        flash(f"Ошибка при получении данных", "error")
     finally:
         if conn:
             conn.close()
@@ -1326,7 +1326,7 @@ def accept_share_event_request(request_id):
                 flash("Заявка не найдена.", "error")
 
         except Exception as e:
-            flash(f"Произошла ошибка: {e}", "error")
+            flash(f"Произошла ошибка", "error")
             conn.rollback()  # В случае ошибки откатить изменения
         finally:
             cur.close()
@@ -1352,7 +1352,7 @@ def decline_share_event_request(request_id):
             conn.commit()
             flash("Заявка была отклонена.", "success")
         except Exception as e:
-            flash(f"Произошла ошибка при отклонении заявки: {e}", "error")
+            flash(f"Произошла ошибка при отклонении заявки", "error")
             conn.rollback()  # В случае ошибки откатить изменения
         finally:
             cur.close()
@@ -1385,7 +1385,7 @@ def cancel_share_event_request(request_id):
                 # Если не найдено ни одной записи для удаления (например, неверный request_id или не тот отправитель)
                 flash("Не удалось отменить запрос. Возможно, он уже был отменен.", "warning")
         except Exception as e:
-            flash(f"Произошла ошибка при отмене заявки: {e}", "error")
+            flash(f"Произошла ошибка при отмене заявки", "error")
             conn.rollback()  # В случае ошибки откатить изменения
         finally:
             cur.close()
