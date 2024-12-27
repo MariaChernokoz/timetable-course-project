@@ -34,7 +34,11 @@
                     <li class="task-item">
                         <div class="task-category {{ event['category'] }}">
                             {% if event['category'] == 'Совместное' %}
-                                Совместное с {{ event['user_login'] }}
+                                {% if event['user_login'] %}
+                                    Совместное с {{ event['user_login'] }}
+                                {% else %}
+                                    Совместное
+                                {% endif %}
                             {% else %}
                                 {{ event['category'] }}
                             {% endif %}

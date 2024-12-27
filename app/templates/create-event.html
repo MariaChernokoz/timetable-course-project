@@ -28,7 +28,7 @@
 
             <div>
                 <label for="location">Место:</label>
-                <input type="text" id="location" name="location">
+                <input type="text" id="location" name="location" >
             </div>
 
             <div>
@@ -97,7 +97,16 @@
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             var now = new Date();
-            var currentDateTime = now.toISOString().slice(0, 16);
+
+            // Получаем локальное время
+            var year = now.getFullYear();
+            var month = String(now.getMonth() + 1).padStart(2, '0'); // Месяцы начинаются с 0
+            var date = String(now.getDate()).padStart(2, '0');
+            var hours = String(now.getHours()).padStart(2, '0');
+            var minutes = String(now.getMinutes()).padStart(2, '0');
+
+            // Форматируем строку в нужный формат
+            var currentDateTime = `${year}-${month}-${date}T${hours}:${minutes}`;
             document.getElementById('start_time').setAttribute('min', currentDateTime);
             document.getElementById('end_time').setAttribute('min', currentDateTime);
             document.getElementById('start_time').value = currentDateTime;
