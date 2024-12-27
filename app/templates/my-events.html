@@ -21,7 +21,6 @@
 
 <a href="{{ url_for('create_event') }}" class="add-task-button">Создать новое событие</a>
 
-
 {% if events_by_date %}
     {% set all_dates = events_by_date.keys() | list %}
     {% for date in all_dates %}

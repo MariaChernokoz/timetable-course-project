@@ -242,6 +242,7 @@ import datetime
 from datetime import datetime
 import pytz
 from datetime import datetime, timedelta
+
 #
 #_____ОТОБРАЖЕНИЕ ОБЫЧНЫХ СОБЫТИЙ СОВМЕЩЕННЫХ С СОВМЕСТНЫМИ СОБЫТИЯМИ______
 @app.route('/my-events')
@@ -251,10 +252,11 @@ def my_events():
     events_by_date = {}
     cur = None
     participant = None
+    is_shared_event = False
     user_timezone = pytz.timezone('Europe/Moscow')
     current_time = datetime.now(user_timezone)  # Теперь это offset-aware время
     #current_time = datetime.datetime.now()  # Получаем текущее время с часовым поясом UTC
-    is_shared_event = False  # Переменная для проверки наличия совместных событий
+    #is_shared_event = False  # Переменная для проверки наличия совместных событий
 
     try:
         cur = conn.cursor()
@@ -465,6 +467,10 @@ def edit_event(event_id):
     conn = connect_to_db()
     if conn:
         cur = conn.cursor()
+        participant = None
+        is_shared_event = False
+        user_timezone = pytz.timezone('Europe/Moscow')
+        current_time = datetime.now(user_timezone)
         if request.method == 'POST':
             # Получаем данные из формы
             event_name = request.form.get('event_name')
@@ -478,11 +484,12 @@ def edit_event(event_id):
             days_of_week = request.form.get("days_of_week")
             end_repeat_str = request.form.get("end_repeat")  # Дата окончания повторений
 
-            user_timezone = pytz.timezone('Europe/Moscow')  # Замените на нужный вам часовой пояс
+            #user_timezone = pytz.timezone('Europe/Moscow')  # Замените на нужный вам часовой пояс
 
             try:
                 event_start_time = user_timezone.localize(datetime.strptime(event_start_time_str, "%Y-%m-%dT%H:%M"))
                 event_end_time = user_timezone.localize(datetime.strptime(event_end_time_str, "%Y-%m-%dT%H:%M"))
+
 
                 if end_repeat_str:
                     end_repeat = user_timezone.localize(datetime.strptime(end_repeat_str, "%Y-%m-%dT%H:%M"))
@@ -543,20 +550,52 @@ def edit_event(event_id):
             cur.execute("""
                 SELECT Event_name, Category, Start_time_and_date, End_time_and_date, Location, Comment, Regularity_ID
                 FROM Events WHERE Event_ID = %s
-            """, (event_id,))
+                """, (event_id,))
+
             event = cur.fetchone()
-            if event:
-                # Получим данные регулярности, если они есть
-                if event[6]:  # Если Regularity_ID существует
+
+            if event:  # Проверяем, существует ли событие
+                event_name, category, start_time, end_time, location, comment, regularity_id = event
+
+                # Преобразуем start_time и end_time в часовой пояс пользователя
+                if start_time.tzinfo is None:
+                    start_time = start_time.replace(tzinfo=pytz.utc).astimezone(user_timezone)
+                else:
+                    start_time = start_time.astimezone(user_timezone)
+
+                if end_time.tzinfo is None:
+                    end_time = end_time.replace(tzinfo=pytz.utc).astimezone(user_timezone)
+                else:
+                    end_time = end_time.astimezone(user_timezone)
+
+                # Проверяем, прошел ли уже срок события
+                if end_time < current_time:
+                    # Удаляем событие из базы данных, если оно прошло
+                    cur.execute("DELETE FROM Events WHERE Event_ID = %s AND User_login = %s",
+                                (event_id, current_user.user_login))
+                    conn.commit()
+                    flash("Событие было удалено, так как оно прошло!", "info")
+                    return redirect(url_for('my_events'))
+
+                # Форматируем даты и время
+                if start_time.date() != end_time.date():
+                    display_time = f"{start_time.strftime('%Y-%m-%d')} {start_time.strftime('%H:%M')} - " \
+                                   f"{end_time.strftime('%Y-%m-%d')} {end_time.strftime('%H:%M')}"
+                else:
+                    display_time = f"{start_time.strftime('%H:%M')} - {end_time.strftime('%H:%M')}"
+
+                # Получаем данные регулярности, если они есть
+                if regularity_id:  # Если Regularity_ID существует
                     cur.execute("""
-                        SELECT Regularity_interval, Days_of_week, End_date
-                        FROM Regularity WHERE Regularity_ID = %s
-                    """, (event[6],))
+                            SELECT Regularity_interval, Days_of_week, End_date
+                            FROM Regularity WHERE Regularity_ID = %s
+                        """, (regularity_id,))
                     regularity = cur.fetchone()
                 else:
                     regularity = None
 
-                return render_template('edit-event.html', event=event, regularity=regularity)
+                return render_template('edit-event.html', event=event, regularity=regularity, display_time=display_time)
+
             else:
                 flash("Событие не найдено!", "error")
                 return redirect(url_for('my_events'))
