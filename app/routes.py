@@ -250,6 +250,7 @@ def my_events():
     conn = connect_to_db()
     events_by_date = {}
     cur = None
+    participant = None
     user_timezone = pytz.timezone('Europe/Moscow')
     current_time = datetime.now(user_timezone)  # Теперь это offset-aware время
     #current_time = datetime.datetime.now()  # Получаем текущее время с часовым поясом UTC
@@ -302,7 +303,8 @@ def my_events():
                     "category": category,
                     "comment": comment,
                     "regularity_id": regularity_id,
-                    "is_shared_event": False
+                    "is_shared_event": False,
+                    "user-login": participant
                 }
 
                 event_date = start_time.date()  # Получаем только дату из Start_time_and_date
@@ -336,6 +338,17 @@ def my_events():
             else:
                 end_time = end_time.astimezone(user_timezone)
 
+            # Получение 'совместно с ...'
+            cur.execute("""
+                SELECT User_login
+                FROM JointSharedEventParticipation AS jp 
+                WHERE jp.Shared_event_ID = %s AND User_login != %s
+            """, (event_id, current_user.user_login))
+
+            participants = cur.fetchall()
+            # Преобразуем список участников в простой список строк
+            participant_usernames = [row[0] for row in participants]
+
             # Проверяем, прошел ли уже срок события
             if end_time < current_time:
                 # Удаляем событие из базы данных, если оно прошло
@@ -358,7 +371,8 @@ def my_events():
                     "category": category,
                     "comment": comment,
                     "regularity_id": regularity_id,
-                    "is_shared_event": True
+                    "is_shared_event": True,
+                    "user-login": participant_usernames  # Передаем список участников
                 }
 
                 event_date = start_time.date()  # Получаем только дату
@@ -1016,28 +1030,28 @@ def request_shared_event(recipient_login):
         # Проверка обязательных полей
         if not event_name or not start_time or not end_time:
             flash("Пожалуйста, заполните все обязательные поля.", "error")
-            return redirect(url_for("create_shared_event"))
+            return redirect(url_for("request_shared_event", recipient_login=recipient_login))
 
         # Проверка форматирования дней недели
         if days_of_week and not all(day in '1234567' for day in days_of_week):
             flash("Некорректный формат дней недели. Используйте только цифры от 1 до 7.", "error")
-            return redirect(url_for("create_shared_event"))
+            return redirect(url_for("request_shared_event", recipient_login=recipient_login))
 
         # Проверка длины названия события
         if event_name and len(event_name) > 30:
             flash("Название события не должно превышать 30 символов.", "error")
-            return redirect(url_for("create_event"))
+            return redirect(url_for("request_shared_event", recipient_login=recipient_login))
 
         # Проверка длины места
         if location and len(location) > 30:
             flash("Место не должно превышать 30 символов.", "error")
-            return redirect(url_for("create_event"))
+            return redirect(url_for("request_shared_event", recipient_login=recipient_login))
 
 
         # Проверка длины комментария
         if comment and len(comment) > 30:
             flash("Комментарий не должен превышать 30 символов.", "error")
-            return redirect(url_for("create_shared_event"))
+            return redirect(url_for("request_shared_event", recipient_login=recipient_login))
 
         try:
             start_time = datetime.strptime(start_time, "%Y-%m-%dT%H:%M")
@@ -1048,14 +1062,14 @@ def request_shared_event(recipient_login):
             # Проверка, не находится ли время в прошлом и время окончания больше времени начала
             if start_time < datetime.now():
                 flash("Время начала не может быть в прошлом.", "error")
-                return redirect(url_for("create_shared_event"))
+                return redirect(url_for("request_shared_event", recipient_login=recipient_login))
             if end_time <= start_time:
                 flash("Время окончания должно быть позже времени начала.", "error")
-                return redirect(url_for("create_shared_event"))
+                return redirect(url_for("request_shared_event", recipient_login=recipient_login))
 
         except ValueError:
             flash("Некорректный формат даты и времени.", "error")
-            return redirect(url_for("create_shared_event"))
+            return redirect(url_for("request_shared_event", recipient_login=recipient_login))
 
         conn = connect_to_db()
 
