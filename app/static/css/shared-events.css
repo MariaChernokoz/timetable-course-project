@@ -171,6 +171,7 @@ h1, h2 {
 .comment {
        position: relative;
        padding-left: 20px; /* Отступ для иконки */
+       resize: none;
    }
 
    .comment::before {
@@ -237,7 +238,7 @@ h1, h2 {
 }
 
 .task-button {
-    background-color: #800000;
+    background-color: #800020;
     color: white;
     border: none;
     padding: 8px 15px;
@@ -258,7 +259,7 @@ h1, h2 {
 }
 
 .alert.error {
-    background-color: #800000; /* Красный для ошибок */
+    background-color: #800020; /* Красный для ошибок */
 }
 
 .alert.success {

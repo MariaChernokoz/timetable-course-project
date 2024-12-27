@@ -103,7 +103,7 @@
 }
 
 .alert.error {
-    background-color: #800000; /* Красный для ошибок */
+    background-color: #800020; /* Красный для ошибок */
 }
 
 .alert.success {
@@ -169,7 +169,7 @@
 }
 
 .friend-button {
-    background-color: #800000;
+    background-color: #800020;
     color: white;
     border: none;
     padding: 8px 15px;
@@ -203,28 +203,6 @@
 .add-button:hover {
     background-color: #800020; /* Темнее при наведении */
     color: white;
-}
-
-.delete-button {
-    background-color: #800020; /* Темно-бордовый */
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    width: 100%;
-    transform: translateX(-10px); /* Сдвиг влево на 10 пикселей */
-}
-
-
-.delete-button:hover {
-    background-color: #404040; /* Темнее при наведении */
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    width: 100%;
 }
 
 
@@ -336,13 +314,14 @@
     /*font-family: 'Roboto', sans-serif; */
      font-size: 1em;
 }
-.cancel-button{
-  background-color: #404040;
+.no-button{
+  background-color: #804040;
     color: #fff;
 }
-.cancel-button:hover{
+.no-button:hover{
       background-color: #800020;
 }
+
 .confirm-button {
     background-color: #804040;
     color: white;
@@ -350,4 +329,20 @@
 .confirm-button:hover {
         background-color: #800020;
 
+}
+
+.remove-friend-button {
+    background-color: #800020;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 5px;
+    margin-right: 10px; /* Отступ для отделения от рамки события */
+    position: relative;
+    text-decoration: none;
+}
+
+.remove-friend-button: hover{
+    background-color: #404040;
 }

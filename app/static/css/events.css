@@ -47,7 +47,7 @@
     display: block; /* Убедитесь, что кнопка является блочным элементом для центрирования */
 }
 .add-task-button:hover {
-background-color: #800000;
+background-color: #800020;
 }
 
 .messages-list {
@@ -167,7 +167,7 @@ h1, h2 {
 }
 
 .task-button {
-    background-color: #800000;
+    background-color: #800020;
     color: white;
     border: none;
     padding: 8px 15px;
@@ -193,7 +193,7 @@ h1, h2 {
 }
 
 .alert.error {
-    background-color: #800000; /* Красный для ошибок */
+    background-color: #800020; /* Красный для ошибок */
 }
 
 .alert.success {
@@ -280,7 +280,7 @@ h1, h2 {
 }
 
 .friend-button {
-    background-color: #800000;
+    background-color: #800020;
     color: white;
     border: none;
     padding: 8px 15px;
@@ -409,4 +409,39 @@ h1, h2 {
     text-align: center;
     font-style: italic;
     color: #777;
+}
+
+.flash-messages {
+    position: fixed; /* Зафиксировано в верхней части страницы */
+    top: 30px; /* Отступ сверху */
+    right: 10px; /* Отступ справа */
+    z-index: 1000; /* Обеспечьте, чтобы уведомления всегда были на переднем плане */
+}
+
+.alert {
+    padding: 15px;
+    margin-top: 50px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    color: white;
+    background-color: #333333; /* Серый цвет по умолчанию */
+}
+
+.alert.error {
+    background-color: #800020; /* Красный для ошибок */
+}
+
+.alert.success {
+    background-color: #4CAF50; /* Зеленый для успешных сообщений */
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 16px;
+    float: right;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 15px;
 }

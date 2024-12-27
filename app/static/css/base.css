@@ -24,7 +24,7 @@
 }
 
 .nav-link {
-    color: #800000;
+    color: #800020;
     border-radius: 5px;
     font-size: 1rem;
     padding: 10px 15px; /* Добавим отступы для кнопок */
@@ -35,13 +35,13 @@
     top: 5px; /* Сдвигаем кнопку вверх */
 }
 .nav-link:hover {
-    color: #800000;
+    color: #800020;
     background-color: rgba(220, 53, 69, 0.1) /* при наведении */
 }
 .nav-link.active {
-    background-color: #800000;
+    background-color: #800020;
     color: #f8f9fa;
-    border: 1px solid #800000;
+    border: 1px solid #800020;
 }
 .user-info {
     display: flex;
@@ -59,7 +59,7 @@
 }
 
 .logout-button:hover {
-    background-color: #800000;
+    background-color: #800020;
 }
 
 .logout-button a {

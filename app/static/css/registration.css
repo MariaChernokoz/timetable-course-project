@@ -40,7 +40,7 @@ input[type="password"] {
 }
 
 input[type="submit"] {
-    background-color: #b00000; /* Darker red */
+    background-color: #800020; /* Darker red */
     color: white;
     padding: 10px 20px;
     border: none;
@@ -85,7 +85,7 @@ p {
 }
 
 .alert.error {
-    background-color: #800000; /* Красный для ошибок */
+    background-color: #800020; /* Красный для ошибок */
 }
 
 .alert.success {
