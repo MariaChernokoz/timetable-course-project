@@ -47,7 +47,7 @@
     display: block; /* Убедитесь, что кнопка является блочным элементом для центрирования */
 }
 .add-task-button:hover {
-background-color: #800000;
+background-color: #800020;
 }
 
 .messages-list {
@@ -167,7 +167,7 @@ h1, h2 {
 }
 
 .task-button {
-    background-color: #800000;
+    background-color: #800020;
     color: white;
     border: none;
     padding: 8px 15px;
@@ -193,7 +193,7 @@ h1, h2 {
 }
 
 .alert.error {
-    background-color: #800000; /* Красный для ошибок */
+    background-color: #800020; /* Красный для ошибок */
 }
 
 .alert.success {
@@ -280,7 +280,7 @@ h1, h2 {
 }
 
 .friend-button {
-    background-color: #800000;
+    background-color: #800020;
     color: white;
     border: none;
     padding: 8px 15px;

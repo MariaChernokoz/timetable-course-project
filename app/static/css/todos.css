@@ -47,7 +47,7 @@
 }
 
 .task-button {
-    background-color: #800000;
+    background-color: #800020;
     color: white;
     border: none;
     padding: 8px 15px;
@@ -79,7 +79,7 @@
 }
 
 .add-task-button:hover {
-    background-color: #800000; /* Цвет фона при наведении */
+    background-color: #800020; /* Цвет фона при наведении */
 }
 
 .modal {
@@ -184,7 +184,7 @@
 }
 
 .alert.error {
-    background-color: #800000; /* Красный для ошибок */
+    background-color: #800020; /* Красный для ошибок */
 }
 
 .alert.success {
@@ -267,6 +267,5 @@
     color: white;
 }
 .confirm-button:hover {
-        background-color: #804040; /* темный сюдаааааа*/
-
+        background-color: #804040;
 }

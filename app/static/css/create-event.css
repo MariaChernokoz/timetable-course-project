@@ -163,7 +163,7 @@ h1, h2 {
 }
 
 .task-button {
-    background-color: #800000;
+    background-color: #800020;
     color: white;
     text-decoration: none; /* Убирает подчеркивание */
     border: none;
@@ -252,7 +252,7 @@ h1, h2 {
 }
 
 .create-event-button:hover {
-    background-color: #800000; /* Цвет фона при наведении */
+    background-color: #800020; /* Цвет фона при наведении */
 }
 
 .back-button {
@@ -270,7 +270,7 @@ h1, h2 {
 }
 
 .back-button:hover {
-    background-color: #800000; /* Цвет фона при наведении */
+    background-color: #800020; /* Цвет фона при наведении */
 }
 
 .flash-messages {
@@ -294,7 +294,7 @@ h1, h2 {
 }
 
 .alert.error {
-    background-color: #800000; /* Красный для ошибок */
+    background-color: #800020; /* Красный для ошибок */
 }
 
 .alert.success {
