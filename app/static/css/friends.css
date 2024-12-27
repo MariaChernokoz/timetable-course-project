@@ -314,13 +314,14 @@
     /*font-family: 'Roboto', sans-serif; */
      font-size: 1em;
 }
-.cancel-button{
+.no-button{
   background-color: #804040;
     color: #fff;
 }
-.cancel-button:hover{
+.no-button:hover{
       background-color: #800020;
 }
+
 .confirm-button {
     background-color: #804040;
     color: white;
@@ -340,4 +341,8 @@
     margin-right: 10px; /* Отступ для отделения от рамки события */
     position: relative;
     text-decoration: none;
+}
+
+.remove-friend-button: hover{
+    background-color: #404040;
 }
