@@ -103,6 +103,8 @@ def registration():
 def base():
     return render_template("base.html")
 
+from datetime import datetime
+
 @app.route('/create-event', methods=["GET", "POST"])
 def create_event():
     if request.method == "POST":
@@ -236,14 +238,21 @@ def create_event():
 
     return render_template('create-event.html', active_page='my_events')
 
- #_____ОТОБРАЖЕНИЕ ОБЫЧНЫХ СОБЫТИЙ СОВМЕЩЕННЫХ С СОВМЕСТНЫМИ СОБЫТИЯМИ______
+import datetime
+from datetime import datetime
+import pytz
+from datetime import datetime, timedelta
+#
+#_____ОТОБРАЖЕНИЕ ОБЫЧНЫХ СОБЫТИЙ СОВМЕЩЕННЫХ С СОВМЕСТНЫМИ СОБЫТИЯМИ______
 @app.route('/my-events')
 def my_events():
 
     conn = connect_to_db()
     events_by_date = {}
     cur = None
-    current_time = datetime.now(pytz.utc)  # Получаем текущее время с часовым поясом UTC
+    user_timezone = pytz.timezone('Europe/Moscow')
+    current_time = datetime.now(user_timezone)  # Теперь это offset-aware время
+    #current_time = datetime.datetime.now()  # Получаем текущее время с часовым поясом UTC
     is_shared_event = False  # Переменная для проверки наличия совместных событий
 
     try:
@@ -260,9 +269,16 @@ def my_events():
         for event in fetched_events:
             event_id, event_name, start_time, end_time, location, category, comment, regularity_id = event
 
-            # Преобразуем end_time в UTC, если он не имеет информации о часовом поясе
+            # Преобразуем start_time и end_time в часовой пояс пользователя
+            if start_time.tzinfo is None:
+                start_time = start_time.replace(tzinfo=pytz.utc).astimezone(user_timezone)
+            else:
+                start_time = start_time.astimezone(user_timezone)
+
             if end_time.tzinfo is None:
-                end_time = end_time.replace(tzinfo=pytz.utc)
+                end_time = end_time.replace(tzinfo=pytz.utc).astimezone(user_timezone)
+            else:
+                end_time = end_time.astimezone(user_timezone)
 
             # Проверяем, прошел ли уже срок события
             if end_time < current_time:
@@ -309,30 +325,48 @@ def my_events():
         for event in fetched_shared_events:
             event_id, event_name, start_time, end_time, location, category, comment, regularity_id = event
 
-            # Форматируем даты и время для совместных событий
-            if start_time.date() != end_time.date():
-                display_time = f"{start_time.strftime('%Y-%m-%d')} {start_time.strftime('%H:%M')} - " \
-                               f"{end_time.strftime('%Y-%m-%d')} {end_time.strftime('%H:%M')}"
+            # Преобразуем start_time и end_time в часовой пояс пользователя
+            if start_time.tzinfo is None:
+                start_time = start_time.replace(tzinfo=pytz.utc).astimezone(user_timezone)
             else:
-                display_time = f"{start_time.strftime('%H:%M')} - {end_time.strftime('%H:%M')}"
+                start_time = start_time.astimezone(user_timezone)
 
-            shared_event_entry = {
-                "id": event_id,
-                "name": event_name,
-                "time": display_time,
-                "location": location,
-                "category": category,
-                "comment": comment,
-                "regularity_id": regularity_id,
-                "is_shared_event": True
-            }
+            if end_time.tzinfo is None:
+                end_time = end_time.replace(tzinfo=pytz.utc).astimezone(user_timezone)
+            else:
+                end_time = end_time.astimezone(user_timezone)
 
-            event_date = start_time.date()  # Получаем только дату
-            if event_date not in events_by_date:
-                events_by_date[event_date] = []
-            # Пример проверки на существование записи
-            if shared_event_entry not in events_by_date[event_date]:
-                events_by_date[event_date].append(shared_event_entry)
+            # Проверяем, прошел ли уже срок события
+            if end_time < current_time:
+                # Удаляем событие из базы данных, если оно прошло
+                cur.execute("DELETE FROM Events WHERE Event_ID = %s AND User_login = %s",
+                            (event_id, current_user.user_login))
+                conn.commit()
+            else:
+                # Форматируем даты и время для совместных событий
+                if start_time.date() != end_time.date():
+                    display_time = f"{start_time.strftime('%Y-%m-%d')} {start_time.strftime('%H:%M')} - " \
+                                   f"{end_time.strftime('%Y-%m-%d')} {end_time.strftime('%H:%M')}"
+                else:
+                    display_time = f"{start_time.strftime('%H:%M')} - {end_time.strftime('%H:%M')}"
+
+                shared_event_entry = {
+                    "id": event_id,
+                    "name": event_name,
+                    "time": display_time,
+                    "location": location,
+                    "category": category,
+                    "comment": comment,
+                    "regularity_id": regularity_id,
+                    "is_shared_event": True
+                }
+
+                event_date = start_time.date()  # Получаем только дату
+                if event_date not in events_by_date:
+                    events_by_date[event_date] = []
+                # Пример проверки на существование записи
+                if shared_event_entry not in events_by_date[event_date]:
+                    events_by_date[event_date].append(shared_event_entry)
 
 
     except psycopg.Error as e:
