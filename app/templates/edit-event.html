@@ -25,10 +25,10 @@
                 <input type="text" id="event_name" name="event_name" value="{{ event[0] }}" required>
 
                 <label for="start_time">Начало:</label>
-                <input type="datetime-local" id="start_time" name="start_time" value="{{ event[2].strftime('%Y-%m-%dT%H:%M') }}" required>
+                <input type="datetime-local" id="start_time" name="start_time" value="{{ display_start_time }}" required>
 
                 <label for="end_time">Конец:</label>
-                <input type="datetime-local" id="end_time" name="end_time" value="{{ event[3].strftime('%Y-%m-%dT%H:%M') }}" required>
+                <input type="datetime-local" id="end_time" name="end_time" value="{{ display_end_time }}" required>
 
                 <label for="location">Место:</label>
                 <input type="text" id="location" name="location" value="{{ event[4] }}">
@@ -65,7 +65,7 @@
                     <div>
                         <label for="end_repeat">Конец повторений:</label>
                         <input type="datetime-local" id="end_repeat" name="end_repeat"
-                               value="{% if event[6] %}{{ regularity[2].strftime('%Y-%m-%dT%H:%M') }}{% endif %}">
+                               value="{% if event[6] %}{{ regularity[2] }}{% endif %}">
                     </div>
                 </div>
 

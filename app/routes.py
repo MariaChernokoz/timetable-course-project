@@ -9,7 +9,6 @@ import pytz
 
 user_timezone = pytz.timezone('Europe/Moscow')
 
-
 def connect_to_db():
     con = 0
     try:
@@ -195,6 +194,41 @@ def create_event():
                     """,
                     (user_login, event_name, start_time, end_time, location, category, comment, regularity_id)
                 )
+                # Получаем созданное Event_ID
+                event_id = cur.fetchone()[0]
+
+                # создаем все экземпляры события
+                new_events = generate_regular_events(
+                    start_time,
+                    end_time,
+                    regularity_interval,
+                    end_repeat,
+                    event_name,
+                    user_login,
+                    location,
+                    category,
+                    comment,
+                    regularity_id
+                )
+
+                # Получаем все существующие события с regularity_id
+                cur.execute("SELECT * FROM Events WHERE Regularity_ID = %s", (regularity_id,))
+                existing_events = cur.fetchall()
+
+                # При вставке экземпляров событий исключаем повторное создание основного события
+                existing_start_times = set(event[3] for event in existing_events)
+
+                # вставка экземпляров событий
+                for event in new_events:
+                    if event["start_time_and_date"] not in existing_start_times:
+                        cur.execute("""
+                                      INSERT INTO Events (User_login, Event_name, Start_time_and_date, End_time_and_date, LOCATION, Category, COMMENT, Regularity_ID)
+                                      VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                                  """, (event["user_login"], event["event_name"], event["start_time_and_date"],
+                                        event["end_time_and_date"], event["LOCATION"], event["Category"],
+                                        event["COMMENT"], event["Regularity_ID"]))
+
+
             else:
                 # Если событие не регулярное, просто создаем его
                 cur.execute(
@@ -204,25 +238,6 @@ def create_event():
                     """,
                     (user_login, event_name, start_time, end_time, location, category, comment)
                 )
-
-            event_id = cur.fetchone()[0]  # Получение созданного Event_ID
-
-            # Если событие регулярное, создаем его экземпляры
-            if is_regular:
-                current_event_start_time = start_time
-                current_event_end_time = end_time
-                current_event_start_time += timedelta(weeks=int(regularity_interval))
-                current_event_end_time += timedelta(weeks=int(regularity_interval))
-                while current_event_start_time <= end_repeat:
-                    cur.execute(
-                        """
-                        INSERT INTO Events (User_login, Event_name, Start_time_and_date, End_time_and_date, Location, Category, Comment, Regularity_ID)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                        """,
-                        (user_login, event_name, current_event_start_time, current_event_end_time, location, category, comment, regularity_id)
-                    )
-                    current_event_start_time += timedelta(weeks=int(regularity_interval))  # Увеличиваем на интервал
-                    current_event_end_time += timedelta(weeks=int(regularity_interval))
 
             conn.commit()
             return redirect(url_for("my_events"))
@@ -461,6 +476,29 @@ def delete_event(event_id):
 
     return redirect(url_for('my_events'))
 
+def generate_regular_events(start_time, end_time, regularity_interval, end_date, event_name, user_login, location, category, comment, regularity_id):
+
+  events = []
+  current_event_start_time = start_time
+  current_event_end_time = end_time
+  weeks_interval = int(regularity_interval) # интервал в неделях
+
+  while current_event_start_time <= end_date:
+      events.append({
+          "user_login": user_login,
+          "event_name": event_name,
+          "start_time_and_date": current_event_start_time,
+          "end_time_and_date": current_event_end_time,
+          "LOCATION": location,
+          "Category": category,
+          "COMMENT": comment,
+          "Regularity_ID": regularity_id
+      })
+      current_event_start_time += timedelta(weeks=weeks_interval)
+      if current_event_end_time:
+          current_event_end_time += timedelta(weeks=weeks_interval)
+  return events
+
 @app.route('/edit-event/<int:event_id>', methods=["GET", "POST"])
 def edit_event(event_id):
     conn = connect_to_db()
@@ -495,24 +533,90 @@ def edit_event(event_id):
                 else:
                     end_repeat = None
 
+                # Получаем старые данные из таблицы events
+                cur.execute("SELECT * FROM Events WHERE Event_ID = %s AND User_login = %s",
+                            (event_id, current_user.user_login))
+                old_event = cur.fetchone()
+                # Получаем старые данные из таблицы Regularity
+                old_regularity_id = old_event[8]
+                old_regularity_end_date = None
+                old_regularity_interval = None
+
+                if old_regularity_id:
+                    cur.execute("SELECT * FROM Regularity WHERE Regularity_ID = %s", (old_regularity_id,))
+                    old_regularity_info = cur.fetchone()
+                    old_regularity_end_date = old_regularity_info[3]
+                    old_regularity_interval = old_regularity_info[1]
+
                 if is_regular:
                     # Проверка: не ранее ли дата и время конца события
                     if end_repeat and end_repeat < event_end_time:
                         flash("Конец повторений должен быть позже времени окончания события.", "error")
                         return redirect(url_for("edit_event", event_id=event_id))
 
-                    # Обновление или создание записи регулярности
-                    cur.execute("""
-                        INSERT INTO Regularity (Regularity_interval, Days_of_week, End_date)
-                        VALUES (%s, %s, %s) 
-                        ON CONFLICT (Regularity_ID) DO UPDATE
-                        SET Regularity_interval = excluded.Regularity_interval,
-                            Days_of_week = excluded.Days_of_week,
-                            End_date = excluded.End_date
-                        RETURNING Regularity_ID
-                    """, (regularity_interval, days_of_week, end_repeat))
 
-                    regularity_id = cur.fetchone()[0]
+                    # Проверка есть ли уже Regularity_ID
+                    if not old_regularity_id:  # если регулярности нет
+                        # Создание записи регулярности
+                        cur.execute("""
+                                INSERT INTO Regularity (Regularity_interval, Days_of_week, End_date)
+                                VALUES (%s, %s, %s) 
+                                RETURNING Regularity_ID
+                            """, (regularity_interval, days_of_week, end_repeat))
+
+                        regularity_id = cur.fetchone()[0]
+                    else:
+                        regularity_id = old_regularity_id
+                        cur.execute("""
+                                        UPDATE Regularity
+                                        SET Regularity_interval = %s, Days_of_week = %s, End_date = %s
+                                        WHERE Regularity_ID = %s
+                                    """,
+                                    (regularity_interval, days_of_week, end_repeat, old_regularity_id)
+                                    )
+
+                    # Сравниваем старую и новую end_repeat
+                    if old_regularity_end_date != end_repeat:
+                        # получаем все события с Regularity_ID
+                        cur.execute("SELECT * FROM Events WHERE Regularity_ID = %s", (regularity_id,))
+                        regular_events = cur.fetchall()
+
+                        # если добавилась регулярность или время конца события сдвинулось вперед
+                        if end_repeat and (old_regularity_end_date is None or end_repeat > old_regularity_end_date):
+                            # Генерируем события
+                            new_events = generate_regular_events(
+                                event_start_time,
+                                event_end_time,
+                                regularity_interval,
+                                end_repeat,
+                                event_name,
+                                current_user.user_login,
+                                event_location,
+                                event_category,
+                                event_comment,
+                                regularity_id
+                            )
+
+                            # Множество для исключения повторов при вставке новых событий
+                            existing_start_times = set((event[3], event[4]) for event in regular_events)
+
+                            # вставка новых событий
+                            for event in new_events:
+                                if (
+                                event["start_time_and_date"], event["end_time_and_date"]) not in existing_start_times:
+                                    cur.execute("""
+                                                INSERT INTO Events (User_login, Event_name, Start_time_and_date, End_time_and_date, LOCATION, Category, COMMENT, Regularity_ID)
+                                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                                                """,
+                                                (event["user_login"], event["event_name"], event["start_time_and_date"],
+                                                 event["end_time_and_date"], event["LOCATION"], event["Category"],
+                                                 event["COMMENT"], event["Regularity_ID"]))
+
+                        # если время конца события сдвинулось назад
+                        elif old_regularity_end_date and end_repeat and end_repeat < old_regularity_end_date:
+                            # удаляем события
+                            cur.execute("DELETE FROM Events WHERE Regularity_ID = %s AND Start_time_and_date > %s",
+                                        (regularity_id, end_repeat))
 
                     # Обновляем событие с привязкой к Regularity_ID
                     cur.execute("""
@@ -544,6 +648,7 @@ def edit_event(event_id):
                 conn.close()
 
             return redirect(url_for('my_events'))
+
         else:
             # Получаем текущее состояние события для отображения в форме
             cur.execute("""
@@ -577,11 +682,8 @@ def edit_event(event_id):
                     return redirect(url_for('my_events'))
 
                 # Форматируем даты и время
-                if start_time.date() != end_time.date():
-                    display_time = f"{start_time.strftime('%Y-%m-%d')} {start_time.strftime('%H:%M')} - " \
-                                   f"{end_time.strftime('%Y-%m-%d')} {end_time.strftime('%H:%M')}"
-                else:
-                    display_time = f"{start_time.strftime('%H:%M')} - {end_time.strftime('%H:%M')}"
+                start_time_str = start_time.strftime('%Y-%m-%dT%H:%M')  # Форматируем время
+                end_time_str = end_time.strftime('%Y-%m-%dT%H:%M')
 
                 # Получаем данные регулярности, если они есть
                 if regularity_id:  # Если Regularity_ID существует
@@ -590,10 +692,19 @@ def edit_event(event_id):
                             FROM Regularity WHERE Regularity_ID = %s
                         """, (regularity_id,))
                     regularity = cur.fetchone()
+
+                    # получаем дату окончания с учетом часового пояса
+                    if regularity[2]:
+                        end_date = regularity[2].astimezone(user_timezone)
+                        end_date_str = end_date.strftime('%Y-%m-%dT%H:%M')
+                    else:
+                        end_date_str = None
+                    regularity = (regularity[0], regularity[1], end_date_str)
+
                 else:
                     regularity = None
 
-                return render_template('edit-event.html', event=event, regularity=regularity, display_time=display_time)
+                return render_template('edit-event.html', event=event, regularity=regularity, display_start_time=start_time_str, display_end_time=end_time_str)
 
             else:
                 flash("Событие не найдено!", "error")
