@@ -10,7 +10,7 @@
 # Ссылка на развернутое веб-приложение
  [https://timetable-xjv4.onrender.com](https://timetable-xjv4.onrender.com)
 
- [Краткий видеообзор функционала веб-приложения](https://youtu.be/YcDU3sF3iec?si=UlkMQYKwDSU4AoTI)
+# [Краткий видеообзор функционала веб-приложения](https://youtu.be/YcDU3sF3iec?si=UlkMQYKwDSU4AoTI)
     
 **Ключевые возможности**
 
